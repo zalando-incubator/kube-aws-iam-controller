@@ -1,0 +1,49 @@
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: aws-iam-example
+  labels:
+    application: aws-iam-example
+    version: latest
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      application: aws-iam-example
+  template:
+    metadata:
+      labels:
+        application: aws-iam-example
+        version: latest
+    spec:
+      containers:
+      - name: aws-iam-example
+        image: alpine:latest
+        command: ["sh", "-c"]
+        env:
+        # must be set for the AWS SDK/AWS CLI to find the credentials file.
+        - name: AWS_SHARED_CREDENTIALS_FILE
+          value: /meta/aws-iam/credentials
+        - name: S3_BUCKET
+          value: <my-bucket>
+        args:
+          - |
+            apk add -U bash python py-pip py-setuptools ca-certificates;
+            pip --no-cache-dir install awscli;
+            while true; do aws s3 ls "s3://${S3_BUCKET}"; sleep 120; done
+        volumeMounts:
+        - name: aws-iam-credentials
+          mountPath: /meta/aws-iam
+          readOnly: true
+        resources:
+          limits:
+            cpu: 200m
+            memory: 1Gi
+          requests:
+            cpu: 100m
+            memory: 512Mi
+      volumes:
+      - name: aws-iam-credentials
+        secret:
+          # secret should be named: aws-iam-<name-of-your-aws-iam-role>
+          secretName: aws-iam-<my-iam-role-name>

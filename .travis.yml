@@ -1,0 +1,15 @@
+language: go
+
+go:
+  - 1.x
+
+before_install:
+  # - go get github.com/mattn/goveralls
+  - go get -u github.com/golang/dep/cmd/dep
+
+install:
+  - dep ensure -v -vendor-only
+
+script:
+  # - goveralls -service=travis-ci
+  - make

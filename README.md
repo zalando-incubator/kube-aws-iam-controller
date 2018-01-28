@@ -36,8 +36,8 @@ single instance and distributes AWS IAM credentials via secrets. This solves
 the race condition problem by relying on a property of Kubernetes which ensures
 that a secret, mounted by a pod, must exist before the pod is started.
 
-One trade-off with this solution is that each pod requiring AWS IAM credentials
-must define a secret mount rather than a single annotation.
+One minor trade-off with this solution is that each pod requiring AWS IAM
+credentials must define a secret mount rather than a single annotation.
 
 ## How it works
 

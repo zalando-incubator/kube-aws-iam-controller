@@ -15,18 +15,20 @@ import (
 )
 
 const (
-	defaultInterval       = "10s"
-	defaultRefreshLimit   = "15m"
-	defaultEventQueueSize = "10"
+	defaultInterval          = "10s"
+	defaultRefreshLimit      = "15m"
+	defaultEventQueueSize    = "10"
+	defaultIAMRoleAnnotation = "iam.amazonaws.com/role"
 )
 
 var (
 	config struct {
-		Interval       time.Duration
-		RefreshLimit   time.Duration
-		EventQueueSize int
-		BaseRoleARN    string
-		APIServer      *url.URL
+		Interval          time.Duration
+		RefreshLimit      time.Duration
+		EventQueueSize    int
+		BaseRoleARN       string
+		APIServer         *url.URL
+		IAMRoleAnnotation string
 	}
 )
 
@@ -39,6 +41,9 @@ func main() {
 		Default(defaultEventQueueSize).IntVar(&config.EventQueueSize)
 	kingpin.Flag("base-role-arn", "Base Role ARN. If not defined it will be autodiscovered from EC2 Metadata.").
 		StringVar(&config.BaseRoleARN)
+	kingpin.Flag("iam-role-annotation", "Name of the IAM Role annotation to be specified on pods. If the value is '' this feature will be disabled.").
+		Default(defaultIAMRoleAnnotation).
+		StringVar(&config.IAMRoleAnnotation)
 	kingpin.Flag("apiserver", "API server url.").URLVar(&config.APIServer)
 	kingpin.Parse()
 
@@ -48,7 +53,6 @@ func main() {
 		kubeConfig = &rest.Config{
 			Host: config.APIServer.String(),
 		}
-
 	}
 
 	client, err := kubeClient(kubeConfig)
@@ -70,6 +74,12 @@ func main() {
 		log.Infof("Autodiscovered Base Role ARN: %s", config.BaseRoleARN)
 	}
 
+	if config.IAMRoleAnnotation != "" {
+		log.Infof("Pod IAM Role annotation: %s", config.IAMRoleAnnotation)
+	} else {
+		log.Info("Pod IAM Role annotation discovery not enabled")
+	}
+
 	credsGetter := NewSTSCredentialsGetter(awsSess, config.BaseRoleARN)
 
 	stopChs := make([]chan struct{}, 0, 2)
@@ -88,7 +98,7 @@ func main() {
 		podsEventCh,
 	)
 
-	podWatcher := NewPodWatcher(client, podsEventCh)
+	podWatcher := NewPodWatcher(client, podsEventCh, config.IAMRoleAnnotation)
 
 	go handleSigterm(stopChs)
 

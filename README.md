@@ -39,6 +39,9 @@ that a secret, mounted by a pod, must exist before the pod is started.
 One minor trade-off with this solution is that each pod requiring AWS IAM
 credentials must define a secret mount rather than a single annotation.
 
+**NB** This approach currently doesn't work out of the box as the AWS SDKs
+doesn't support refreshing credentials from a file.
+
 ## How it works
 
 The controller watches for new pods, if it sees a pod which has an AWS IAM role
@@ -63,7 +66,7 @@ container must also have the environment variable
 variable is used by AWS SDKs and the AWS CLI to automatically find and use the
 credentials file.
 
-See a full example in [example-app.yaml](/Docs/example-app.yaml).
+See a full example in [example-app.yaml](/docs/example-app.yaml).
 
 **Note**: This way of specifying the role on pod specs are subject to change.
 It is currently moving a lot of effort on to the users defining the pod specs.
@@ -73,12 +76,12 @@ can inject the required configuration automatically.
 ## Setup
 
 The `kube-aws-iam-controller` can be run as a deployment in the cluster.
-See [deployment.yaml](/Docs/deployment.yaml).
+See [deployment.yaml](/docs/deployment.yaml).
 
 Deploy it by running:
 
 ```bash
-$ kubectl apply -f Docs/deployment.yaml
+$ kubectl apply -f docs/deployment.yaml
 ```
 
 To ensure that pods requiring AWS IAM roles doesn't go to the EC2 metadata
@@ -102,6 +105,64 @@ Where `cni0` is the interface of the pod network on the node.
 **Note**: The controller will read all pods on startup and therefor the memory
 limit for the pod must be set relative to the number of pods in the cluster
 (i.e. vertical scaling).
+
+### Bootstrap in non-AWS environment
+
+If you need access to AWS from another environment e.g. GKE then the controller
+can be deployed with seed credentials and refresh its own credentials used
+for the assume role calls similar to how it refreshes all other credentials.
+
+To create the initial seed credentials you must configure an AWS IAM role used
+for the assume role calls. In this example the IAM role is created via
+cloudformation, but you can do it however you like. The important part is that
+the role has permissions to do `sts` calls as it will be assuming other roles.
+And you should also allow the role to be assumed by your own user for creating
+the initial seed credentials:
+
+```sh
+$ cat role.yaml
+Metadata:
+  StackName: kube-aws-iam-controller-role
+Resources:
+  KubeAWSIAMControllerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: kube-aws-iam-controller-role
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Action: ['sts:AssumeRole']
+          Effect: Allow
+          Principal:
+            AWS: "<arn-of-your-user>"
+        Version: '2012-10-17'
+      Path: /
+      Policies:
+      - PolicyName: assumer-role
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Action:
+            - sts:*
+            Resource: "*"
+            Effect: Allow
+# create the role via cloudformation
+$ aws cloudformation create-stack --stack-name kube-aws-iam-controller-role --template-body=file://role.yaml --capabilities CAPABILITY_NAMED_IAM
+```
+
+And then you can use the script `./scripts/get_credentials.sh` to generate
+initial credentials and create a secret.
+
+```sh
+$ export ARN="arn.of.the.iam.role"
+$ kubectl create secret generic aws-iam-<name-of-role> --from-literal "credentials=$(./scripts/get_credentials.sh "$ARN")"
+```
+
+Once the secret is created you can deploy the controller using the example
+manifest in [deployment_with_role.yaml](/docs/deployment_with_role.yaml).
+
+The controller will use the secret you created with temporary credentials and
+continue to refresh the credentials automatically.
 
 ## Building
 

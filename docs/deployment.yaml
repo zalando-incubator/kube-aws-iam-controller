@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kube-aws-iam-controller
+  namespace: kube-system
+  labels:
+    application: kube-aws-iam-controller
+    version: latest
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      application: kube-aws-iam-controller
+  template:
+    metadata:
+      labels:
+        application: kube-aws-iam-controller
+        version: latest
+    spec:
+      tolerations:
+      - key: CriticalAddonsOnly
+        operator: Exists
+      # running with hostNetwork to bypass metadata service block from pod
+      # network.
+      hostNetwork: true
+      containers:
+      - name: kube-aws-iam-controller
+        image: mikkeloscar/kube-aws-iam-controller:latest
+        resources:
+          limits:
+            cpu: 200m
+            memory: 1Gi
+          requests:
+            cpu: 100m
+            memory: 512Mi

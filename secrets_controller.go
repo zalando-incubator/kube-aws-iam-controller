@@ -22,6 +22,7 @@ const (
 aws_access_key_id = %s
 aws_secret_access_key = %s
 aws_session_token = %s
+aws_expiration = %s
 `
 )
 
@@ -65,6 +66,7 @@ func (c *SecretsController) getCreds(role string) (map[string][]byte, error) {
 		creds.AccessKeyID,
 		creds.SecretAccessKey,
 		creds.SessionToken,
+		creds.Expiration.Format(time.RFC3339),
 	)
 
 	return map[string][]byte{

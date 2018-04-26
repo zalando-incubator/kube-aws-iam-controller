@@ -1,10 +1,10 @@
 # AWS IAM Controller for Kubernetes
 [![Build Status](https://travis-ci.org/mikkeloscar/kube-aws-iam-controller.svg?branch=master)](https://travis-ci.org/mikkeloscar/kube-aws-iam-controller)
 
-This is an **experimental** Kubernetes controller for distributing AWS IAM role
-credentials to pods via secrets.
+This is a **Proof of Concept** Kubernetes controller for distributing AWS IAM
+role credentials to pods via secrets.
 
-It solves the same problem as other existing tools like
+It aims to solve the same problem as other existing tools like
 [jtblin/kube2iam](https://github.com/jtblin/kube2iam), namely distribute
 different AWS IAM roles to different pods within the same cluster.  However, it
 solves the problem in a different way to work around an inherit problem with
@@ -19,8 +19,8 @@ call to [STS](https://docs.aws.amazon.com/STS/latest/APIReference/Welcome.html)
 and get the role requested by the pod (via an annotation). If the assume role
 request is fast, everything is fine, and the pod will get the correct role.
 However, if the assume role request is too slow (>1s) then the AWS SDKs will
-timeout and try to get credentials e.g. via the next option in the chain (e.g.
-a file) resulting in the pod not getting the expected role.
+timeout and try to get credentials via the next option in the chain (e.g.
+a file) resulting in the pod not getting the expected role or no role at all.
 
 This is often not a problem in clusters with a stable workload, but if you have
 clusters with a very dynamic workload there will be a lot of cases where a pod
@@ -28,19 +28,37 @@ starts before kube2iam is ready to provide the expected role. One case is when
 scaling up a cluster and a new pod lands on a fresh node before kube2iam,
 another case is when a new pod is created and starts before kube2iam got the
 event that the pod was created.
+During update of the kube2iam daemonset there will also be a short timeframe
+where the metadata url will be unavailable for the pods which could lead to a
+refresh of credentials failing.
 
 #### Kubernetes secrets solution
 
 Instead of running as a proxy on each node, this controller runs as a
 single instance and distributes AWS IAM credentials via secrets. This solves
 the race condition problem by relying on a property of Kubernetes which ensures
-that a secret, mounted by a pod, must exist before the pod is started.
+that a secret, mounted by a pod, must exist before the pod is started. This
+means that the controller can even be away for a few minutes without affecting
+pods running in the cluster as they will still be able to mount and read the
+secrets.
+Furthermore having a single controller means there is only one caller for to
+the AWS API resulting in fewer calls which can prevent ratelimiting in big
+clusters and you don't need to give all nodes the power to assume other roles
+if it's not needed.
 
 One minor trade-off with this solution is that each pod requiring AWS IAM
 credentials must define a secret mount rather than a single annotation.
 
 **NB** This approach currently doesn't work out of the box as the AWS SDKs
-doesn't support refreshing credentials from a file.
+doesn't support refreshing credentials from a file. I'm reaching out to AWS to
+figure out if this is something that could be supported.
+
+If you are using the Go AWS SDK then you can use my fork which implements basic
+support for reloading credentials from a file. This is available
+[here](https://github.com/mikkeloscar/aws-sdk-go/tree/file-refresh). An example
+of using this with [dep](https://github.com/golang/dep) can be seen in the
+[`Gopkg.toml`](https://github.com/mikkeloscar/kube-aws-iam-controller/blob/master/Gopkg.toml#L24-L27)
+of this repository.
 
 ## How it works
 

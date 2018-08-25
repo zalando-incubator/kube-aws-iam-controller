@@ -1,2 +1,4 @@
 build/
-vendor/
+
+# ignored for now: https://github.com/golang/go/issues/25525
+go.sum

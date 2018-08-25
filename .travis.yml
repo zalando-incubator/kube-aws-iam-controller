@@ -1,14 +1,10 @@
 language: go
 
 go:
-  - 1.x
+  - "1.11"
 
-before_install:
-  # - go get github.com/mattn/goveralls
-  - go get -u github.com/golang/dep/cmd/dep
-
-install:
-  - dep ensure -v -vendor-only
+env:
+- GO111MODULE=on
 
 script:
   # - goveralls -service=travis-ci

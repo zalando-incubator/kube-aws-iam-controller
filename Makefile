@@ -15,10 +15,10 @@ default: build.local
 clean:
 	rm -rf build
 
-test:
+test: go.mod
 	go test -v $(GOPKGS)
 
-check:
+check: go.mod
 	golint $(GOPKGS)
 	go vet -v $(GOPKGS)
 
@@ -26,13 +26,13 @@ build.local: build/$(BINARY)
 build.linux: build/linux/$(BINARY)
 build.osx: build/osx/$(BINARY)
 
-build/$(BINARY): $(SOURCES)
+build/$(BINARY): go.mod $(SOURCES)
 	CGO_ENABLED=0 go build -o build/$(BINARY) $(BUILD_FLAGS) -ldflags "$(LDFLAGS)" .
 
-build/linux/$(BINARY): $(SOURCES)
+build/linux/$(BINARY): go.mod $(SOURCES)
 	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build $(BUILD_FLAGS) -o build/linux/$(BINARY) -ldflags "$(LDFLAGS)" .
 
-build/osx/$(BINARY): $(SOURCES)
+build/osx/$(BINARY): go.mod $(SOURCES)
 	GOOS=darwin GOARCH=amd64 CGO_ENABLED=0 go build $(BUILD_FLAGS) -o build/osx/$(BINARY) -ldflags "$(LDFLAGS)" .
 
 build.docker: build.linux

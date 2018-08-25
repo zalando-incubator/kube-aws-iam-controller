@@ -22,6 +22,7 @@ const (
 
 var (
 	config struct {
+		Debug          bool
 		Interval       time.Duration
 		RefreshLimit   time.Duration
 		EventQueueSize int
@@ -31,6 +32,7 @@ var (
 )
 
 func main() {
+	kingpin.Flag("debug", "Enable debug logging.").BoolVar(&config.Debug)
 	kingpin.Flag("interval", "Interval between syncing secrets.").
 		Default(defaultInterval).DurationVar(&config.Interval)
 	kingpin.Flag("refresh-limit", "Time limit when AWS IAM credentials should be refreshed. I.e. 15 min. before they expire.").
@@ -41,6 +43,10 @@ func main() {
 		StringVar(&config.BaseRoleARN)
 	kingpin.Flag("apiserver", "API server url.").URLVar(&config.APIServer)
 	kingpin.Parse()
+
+	if config.Debug {
+		log.SetLevel(log.DebugLevel)
+	}
 
 	var kubeConfig *rest.Config
 

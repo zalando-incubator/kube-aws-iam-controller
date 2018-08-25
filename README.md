@@ -184,16 +184,14 @@ continue to refresh the credentials automatically.
 
 ## Building
 
-In order to build you first get the dependencies which are managed by
-[dep](https://github.com/golang/dep):
+This project uses [Go modules](https://github.com/golang/go/wiki/Modules) as
+introduced in Go 1.11 therefore you need Go >=1.11 installed in order to build.
+If using Go 1.11 you also need to [activate Module
+support](https://github.com/golang/go/wiki/Modules#installing-and-activating-module-support).
 
-```bash
-$ go get -u github.com/golang/dep/cmd/dep
-$ dep ensure -vendor-only # install all dependencies
-```
+Assuming Go has been setup with module support it can be built simply by running:
 
-After dependencies are installed the controller can be built simply by running:
-
-```bash
+```sh
+export GO111MODULE=on # needed if the project is checked out in your $GOPATH.
 $ make
 ```

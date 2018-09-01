@@ -40,6 +40,7 @@ github.com/json-iterator/go v0.0.0-20180315132816-ca39e5af3ece h1:3HJXp/18JmMk5s
 github.com/json-iterator/go v0.0.0-20180315132816-ca39e5af3ece/go.mod h1:+SdeFBvtyEkXs7REEP0seUULqWtbJapLOCVDaaPEHmU=
 github.com/jtolds/gls v4.2.1+incompatible h1:fSuqC+Gmlu6l/ZYAoZzx2pyucC8Xza35fpRVWLVmUEE=
 github.com/jtolds/gls v4.2.1+incompatible/go.mod h1:QJZ7F/aHp+rZTRtaJ1ow/lLfFfVYBRgL+9YlvaHOwJU=
+github.com/mikkeloscar/aws-sdk-go v1.4.21-0.20180323205119-1290f149475c h1:WeaFBEDviwTYu7EIeS7Vwg4dgMf8JAfzPlfcUQ5Y4Ak=
 github.com/mikkeloscar/aws-sdk-go v1.4.21-0.20180323205119-1290f149475c/go.mod h1:KR/3FK1jsEqjy7yrmjXrfNHZCcKPlpzf9VTE0a6w980=
 github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd h1:TRLaZ9cD/w8PVh93nsPXa1VrQ6jlwL5oN8l14QlcNfg=
 github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd/go.mod h1:6dJC0mAP4ikYIbvyc7fijjWJddQyLn8Ig3JB5CqoB9Q=

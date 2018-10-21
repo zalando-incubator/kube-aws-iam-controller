@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -24,6 +25,11 @@ aws_secret_access_key = %s
 aws_session_token = %s
 aws_expiration = %s
 `
+	credentialsProcessFileKey     = "credentials.process"
+	credentialsProcessFileContent = `[default]
+credential_process = cat /meta/aws-iam/credentials.json
+`
+	credentialsJSONFileKey = "credentials.json"
 )
 
 var (
@@ -39,6 +45,16 @@ type SecretsController struct {
 	creds        CredentialsGetter
 	roleStore    *RoleStore
 	podEvents    <-chan *PodEvent
+}
+
+// ProcessCredentials defines the format expected from process credentials.
+// https://docs.aws.amazon.com/cli/latest/topic/config-vars.html#sourcing-credentials-from-external-processes
+type ProcessCredentials struct {
+	Version         int        `json:"Version"`
+	AccessKeyID     string     `json:"AccessKeyId"`
+	SecretAccessKey string     `json:"SecretAccessKey"`
+	SessionToken    string     `json:"SessionToken"`
+	Expiration      *time.Time `json:"Expiration"`
 }
 
 // NewSecretsController initializes a new SecretsController.
@@ -69,9 +85,24 @@ func (c *SecretsController) getCreds(role string) (map[string][]byte, error) {
 		creds.Expiration.Format(time.RFC3339),
 	)
 
+	processCreds := ProcessCredentials{
+		Version:         1,
+		AccessKeyID:     creds.AccessKeyID,
+		SecretAccessKey: creds.SecretAccessKey,
+		SessionToken:    creds.SessionToken,
+		Expiration:      creds.Expiration,
+	}
+
+	processCredsData, err := json.Marshal(&processCreds)
+	if err != nil {
+		return nil, err
+	}
+
 	return map[string][]byte{
-		expireKey:          []byte(creds.Expiration.Format(time.RFC3339)),
-		credentialsFileKey: []byte(credsFile),
+		expireKey:                 []byte(creds.Expiration.Format(time.RFC3339)),
+		credentialsFileKey:        []byte(credsFile),
+		credentialsProcessFileKey: []byte(credentialsProcessFileContent),
+		credentialsJSONFileKey:    processCredsData,
 	}, nil
 }
 

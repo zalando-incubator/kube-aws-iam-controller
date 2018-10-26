@@ -61,8 +61,12 @@ func (s *RoleStore) Remove(role, namespace, name string) {
 
 	if ns, ok := s.Store[role]; ok {
 		if pods, ok := ns[namespace]; ok {
-			if _, ok := pods[name]; ok && len(pods) == 1 {
-				delete(ns, namespace)
+			if _, ok := pods[name]; ok {
+				if len(pods) == 1 {
+					delete(ns, namespace)
+				} else {
+					delete(pods, name)
+				}
 			}
 
 			if len(ns) == 0 {

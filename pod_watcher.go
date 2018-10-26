@@ -62,6 +62,7 @@ func (p *PodWatcher) add(obj interface{}) {
 	pod, ok := obj.(*v1.Pod)
 	if !ok {
 		log.Errorf("Failed to get pod object")
+		return
 	}
 
 	role := iamRole(pod)
@@ -81,6 +82,7 @@ func (p *PodWatcher) del(obj interface{}) {
 	pod, ok := obj.(*v1.Pod)
 	if !ok {
 		log.Errorf("Failed to get pod object")
+		return
 	}
 
 	role := iamRole(pod)

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
@@ -34,7 +35,7 @@ func NewPodWatcher(client kubernetes.Interface, podEvents chan<- *PodEvent) *Pod
 
 // Run setups up a shared informer for listing and watching changes to pods and
 // starts listening for events.
-func (p *PodWatcher) Run(stopCh <-chan struct{}) {
+func (p *PodWatcher) Run(ctx context.Context) {
 	informer := cache.NewSharedIndexInformer(
 		cache.NewListWatchFromClient(p.client.CoreV1().RESTClient(), "pods", v1.NamespaceAll, fields.Everything()),
 		&v1.Pod{},
@@ -47,9 +48,9 @@ func (p *PodWatcher) Run(stopCh <-chan struct{}) {
 		DeleteFunc: p.del,
 	})
 
-	go informer.Run(stopCh)
+	go informer.Run(ctx.Done())
 
-	if !cache.WaitForCacheSync(stopCh, informer.HasSynced) {
+	if !cache.WaitForCacheSync(ctx.Done(), informer.HasSynced) {
 		log.Errorf("Timed out waiting for caches to sync")
 		return
 	}

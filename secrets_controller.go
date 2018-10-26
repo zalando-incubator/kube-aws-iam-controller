@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -108,8 +109,8 @@ func (c *SecretsController) getCreds(role string) (map[string][]byte, error) {
 
 // Run runs the secret controller loop. This will refresh secrets with AWS IAM
 // roles.
-func (c *SecretsController) Run(stopCh <-chan struct{}) {
-	go c.watchPods()
+func (c *SecretsController) Run(ctx context.Context) {
+	go c.watchPods(ctx)
 
 	for {
 		err := c.refresh()
@@ -119,7 +120,7 @@ func (c *SecretsController) Run(stopCh <-chan struct{}) {
 
 		select {
 		case <-time.After(c.interval):
-		case <-stopCh:
+		case <-ctx.Done():
 			log.Info("Terminating main controller loop.")
 			return
 		}
@@ -128,7 +129,7 @@ func (c *SecretsController) Run(stopCh <-chan struct{}) {
 
 // watchPods listens for pod events on the podEvents queue and updates the
 // roleStore accordingly.
-func (c *SecretsController) watchPods() {
+func (c *SecretsController) watchPods(ctx context.Context) {
 	for {
 		select {
 		case event := <-c.podEvents:
@@ -137,9 +138,8 @@ func (c *SecretsController) watchPods() {
 			} else {
 				c.roleStore.Add(event.Role, event.Namespace, event.Name)
 			}
-			// TODO:
-			// case <-stopChan:
-			// 	return
+		case <-ctx.Done():
+			return
 		}
 	}
 }

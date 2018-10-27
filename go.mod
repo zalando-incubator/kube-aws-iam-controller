@@ -50,6 +50,7 @@ require (
 	k8s.io/api v0.0.0-20180824172530-dd5c735cbff9
 	k8s.io/apimachinery v0.0.0-20180328184639-0ed326127d30
 	k8s.io/client-go v8.0.0+incompatible
+	k8s.io/kube-openapi v0.0.0-20181026222903-0d1aeffe1c68 // indirect
 )
 
 replace github.com/aws/aws-sdk-go => github.com/mikkeloscar/aws-sdk-go v1.4.21-0.20180323205119-1290f149475c

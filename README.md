@@ -1,5 +1,6 @@
 # AWS IAM Controller for Kubernetes
 [![Build Status](https://travis-ci.org/mikkeloscar/kube-aws-iam-controller.svg?branch=master)](https://travis-ci.org/mikkeloscar/kube-aws-iam-controller)
+[![Coverage Status](https://coveralls.io/repos/github/mikkeloscar/kube-aws-iam-controller/badge.svg?branch=master)](https://coveralls.io/github/mikkeloscar/kube-aws-iam-controller?branch=master)
 
 This is a **Proof of Concept** Kubernetes controller for distributing AWS IAM
 role credentials to pods via secrets.

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"net/url"
 	"os"
 	"os/signal"
@@ -96,20 +97,20 @@ func main() {
 
 	podWatcher := NewPodWatcher(client, podsEventCh)
 
-	go handleSigterm(stopChs)
+	ctx, cancel := context.WithCancel(context.Background())
+	go handleSigterm(cancel)
 
-	podWatcher.Run(podWatcherStopCh)
-	controller.Run(controllerStopCh)
+	podWatcher.Run(ctx)
+	controller.Run(ctx)
 }
 
-func handleSigterm(stopChs []chan struct{}) {
+// handleSigterm handles SIGTERM signal sent to the process.
+func handleSigterm(cancelFunc func()) {
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, syscall.SIGTERM)
 	<-signals
 	log.Info("Received Term signal. Terminating...")
-	for _, ch := range stopChs {
-		close(ch)
-	}
+	cancelFunc()
 }
 
 func kubeClient(config *rest.Config) (kubernetes.Interface, error) {

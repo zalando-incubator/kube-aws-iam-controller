@@ -50,9 +50,10 @@ if it's not needed.
 One minor trade-off with this solution is that each pod requiring AWS IAM
 credentials must define a secret mount rather than a single annotation.
 
-**NB** This approach currently doesn't work out of the box as the AWS SDKs
-doesn't support refreshing credentials from a file. I'm reaching out to AWS to
-figure out if this is something that could be supported.
+**NB** This approach currently only works for some of the AWS SDKs. I'm
+reaching out to AWS to figure out if this is something that could be supported.
+
+See the [configuration guide for supported SDKs](/docs/sdk-configuration.md).
 
 If you are using the Go AWS SDK then you can use my fork which implements basic
 support for reloading credentials from a file. This is available
@@ -77,6 +78,9 @@ the credentials are refreshed before they expire. It will also cleanup secrets
 with credentials which are no longer requested by any pods.
 
 ### Specifying AWS IAM role on pods
+
+**See the [configuration guide for supported
+SDKs](/docs/sdk-configuration.md)**.
 
 In order to specify that a pod should get a certain AWS IAM role assigned the
 pod spec must include a volume mount from a secret with the following secret

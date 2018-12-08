@@ -55,15 +55,6 @@ reaching out to AWS to figure out if this is something that could be supported.
 
 See the [configuration guide for supported SDKs](/docs/sdk-configuration.md).
 
-If you are using the Go AWS SDK then you can use my fork which implements basic
-support for reloading credentials from a file. This is available
-[here](https://github.com/mikkeloscar/aws-sdk-go/tree/file-refresh). If using
-Go 1.11 and modules, you can import the fork like this:
-
-```bash
-$ go mod edit -replace=github.com/aws/aws-sdk-go=github.com/mikkeloscar/aws-sdk-go@1290f149475c1e17154d89a87a38f403c56c0c7e
-```
-
 ## How it works
 
 The controller watches for new pods, if it sees a pod which has an AWS IAM role

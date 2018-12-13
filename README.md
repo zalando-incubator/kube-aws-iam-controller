@@ -171,7 +171,7 @@ initial credentials and create a secret.
 
 ```sh
 $ export ARN="arn.of.the.iam.role"
-$ kubectl create secret generic aws-iam-<name-of-role> --from-literal "credentials=$(./scripts/get_credentials.sh "$ARN")"
+$ kubectl create secret generic aws-iam-<name-of-role> --from-literal "credentials.json=$(./scripts/get_credentials.sh "$ARN")" --from-literal "credentials.process=$(printf "[default]\ncredential_process = cat /meta/aws-iam/credentials.json\n")"
 ```
 
 Once the secret is created you can deploy the controller using the example

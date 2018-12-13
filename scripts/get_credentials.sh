@@ -8,4 +8,4 @@ aws_secret_access_key="$(echo -n "$assume_role" | jq -r '.Credentials.SecretAcce
 aws_session_token="$(echo -n "$assume_role" | jq -r '.Credentials.SessionToken')"
 aws_expiration="$(echo -n "$assume_role" | jq -r '.Credentials.Expiration')"
 
-printf "[default]\naws_access_key_id = ${aws_access_key_id}\naws_secret_access_key = $aws_secret_access_key\naws_session_token = $aws_session_token\naws_expiration = $aws_expiration\n"
+printf "{\"Version\": 1, \"AccessKeyId\": \"$aws_access_key_id\", \"SecretAccessKey\":\"$aws_secret_access_key\", \"SessionToken\":\"$aws_session_token\", \"Expiration\": \"$aws_expiration\"}"

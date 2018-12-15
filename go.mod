@@ -3,7 +3,7 @@ module github.com/mikkeloscar/kube-aws-iam-controller
 require (
 	github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc // indirect
 	github.com/alecthomas/units v0.0.0-20151022065526-2efee857e7cf // indirect
-	github.com/aws/aws-sdk-go v1.15.31-0.20181207175608-cab8bf908aef
+	github.com/aws/aws-sdk-go v1.16.6
 	github.com/davecgh/go-spew v1.1.0 // indirect
 	github.com/fsnotify/fsnotify v1.4.7 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect

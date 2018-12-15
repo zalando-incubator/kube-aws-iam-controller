@@ -131,7 +131,7 @@ Configuration is the same as for the [Python AWS SDK](#python-aws-sdk-boto3).
 
 | SDK | Tested version |
 |-----| -------------- |
-| [aws-sdk-go](https://github.com/aws/aws-sdk-go) | `>=`[89ebd3a5f70a416b84e65ad55d9935b7ba72e2dc](https://github.com/aws/aws-sdk-go/commit/89ebd3a5f70a416b84e65ad55d9935b7ba72e2dc) (No release yet) |
+| [aws-sdk-go](https://github.com/aws/aws-sdk-go) | `>=v1.16.2` |
 
 Here's a minimal example of how to configure a deployment so each pod will get
 the AWS credentials.
@@ -179,5 +179,11 @@ secret will be provisioned by the **kube-aws-iam-controller**.
 Also note that for this to work the docker image you use **MUST** contain the
 program `cat`. [`cat` is called by the SDK to read the credentials from a
 file](https://docs.aws.amazon.com/cli/latest/topic/config-vars.html#sourcing-credentials-from-external-processes).
+
+Additionally it's important that your application initializes the AWS session
+using the
+[`session.NewSession()`](https://docs.aws.amazon.com/sdk-for-go/api/aws/session/#NewSession)
+function which correctly initializes the credentials chain. Using the
+DEPRECATED `session.New()` will **NOT** work!
 
 See full [Golang example project](https://github.com/mikkeloscar/kube-aws-iam-controller-golang-example).

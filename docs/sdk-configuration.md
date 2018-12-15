@@ -129,7 +129,7 @@ Configuration is the same as for the [Python AWS SDK](#python-aws-sdk-boto3).
 
 ## Golang AWS SDK
 
-| SDK | Tested version |
+| SDK | Minimal version |
 |-----| -------------- |
 | [aws-sdk-go](https://github.com/aws/aws-sdk-go) | `>=v1.16.2` |
 

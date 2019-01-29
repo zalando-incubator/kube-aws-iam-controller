@@ -17,9 +17,7 @@ spec:
         application: kube-aws-iam-controller
         version: latest
     spec:
-      tolerations:
-      - key: CriticalAddonsOnly
-        operator: Exists
+      serviceAccount: kube-aws-iam-controller
       # running with hostNetwork to bypass metadata service block from pod
       # network.
       hostNetwork: true
@@ -28,8 +26,8 @@ spec:
         image: mikkeloscar/kube-aws-iam-controller:latest
         resources:
           limits:
-            cpu: 200m
-            memory: 1Gi
+            cpu: 25m
+            memory: 100mi
           requests:
-            cpu: 100m
-            memory: 512Mi
+            cpu: 25m
+            memory: 100Mi

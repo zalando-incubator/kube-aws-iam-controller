@@ -5,6 +5,7 @@ VERSION       ?= $(shell git describe --tags --always --dirty)
 IMAGE         ?= mikkeloscar/$(BINARY)
 TAG           ?= $(VERSION)
 SOURCES       = $(shell find . -name '*.go')
+GENERATED     = pkg/client pkg/apis/amazonaws.com/v1/zz_generated.deepcopy.go
 DOCKERFILE    ?= Dockerfile
 GOPKGS        = $(shell go list ./...)
 BUILD_FLAGS   ?= -v
@@ -14,25 +15,29 @@ default: build.local
 
 clean:
 	rm -rf build
+	rm -rf $(GENERATED)
 
-test: go.mod
+test: go.mod $(GENERATED)
 	go test -v $(GOPKGS)
 
-check: go.mod
+check: go.mod $(GENERATED)
 	golint $(GOPKGS)
 	go vet -v $(GOPKGS)
+
+$(GENERATED):
+	./hack/update-codegen.sh
 
 build.local: build/$(BINARY)
 build.linux: build/linux/$(BINARY)
 build.osx: build/osx/$(BINARY)
 
-build/$(BINARY): go.mod $(SOURCES)
+build/$(BINARY): go.mod $(GENERATED) $(SOURCES)
 	CGO_ENABLED=0 go build -o build/$(BINARY) $(BUILD_FLAGS) -ldflags "$(LDFLAGS)" .
 
-build/linux/$(BINARY): go.mod $(SOURCES)
+build/linux/$(BINARY): go.mod $(GENERATED) $(SOURCES)
 	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build $(BUILD_FLAGS) -o build/linux/$(BINARY) -ldflags "$(LDFLAGS)" .
 
-build/osx/$(BINARY): go.mod $(SOURCES)
+build/osx/$(BINARY): go.mod $(GENERATED) $(SOURCES)
 	GOOS=darwin GOARCH=amd64 CGO_ENABLED=0 go build $(BUILD_FLAGS) -o build/osx/$(BINARY) -ldflags "$(LDFLAGS)" .
 
 build.docker: build.linux

@@ -23,7 +23,7 @@ func TestPodWatcherAdd(t *testing.T) {
 	}
 
 	events := make(chan *PodEvent, 1)
-	watcher := NewPodWatcher(nil, events)
+	watcher := NewPodWatcher(nil, v1.NamespaceAll, events)
 
 	go watcher.add(pod)
 	<-events
@@ -48,7 +48,7 @@ func TestPodWatcherDel(t *testing.T) {
 	}
 
 	events := make(chan *PodEvent, 1)
-	watcher := NewPodWatcher(nil, events)
+	watcher := NewPodWatcher(nil, v1.NamespaceAll, events)
 
 	go watcher.del(pod)
 	<-events

@@ -40,17 +40,17 @@ func TestGet(t *testing.T) {
 		},
 	}
 
-	creds, err := getter.Get("role")
+	creds, err := getter.Get("role", 3600*time.Second)
 	require.NoError(t, err)
 	require.Equal(t, "access_key_id", creds.AccessKeyID)
 	require.Equal(t, "secret_access_key", creds.SecretAccessKey)
 	require.Equal(t, "session_token", creds.SessionToken)
-	require.Equal(t, &time.Time{}, creds.Expiration)
+	require.Equal(t, time.Time{}, creds.Expiration)
 
 	getter.svc = &mockSTSAPI{
 		err: errors.New("failed"),
 	}
-	_, err = getter.Get("role")
+	_, err = getter.Get(arnPrefix+"role", 3600*time.Second)
 	require.Error(t, err)
 }
 

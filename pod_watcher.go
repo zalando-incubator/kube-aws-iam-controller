@@ -23,12 +23,14 @@ type PodEvent struct {
 type PodWatcher struct {
 	client    kubernetes.Interface
 	podEvents chan<- *PodEvent
+	namespace string
 }
 
 // NewPodWatcher initializes a new PodWatcher.
-func NewPodWatcher(client kubernetes.Interface, podEvents chan<- *PodEvent) *PodWatcher {
+func NewPodWatcher(client kubernetes.Interface, namespace string, podEvents chan<- *PodEvent) *PodWatcher {
 	return &PodWatcher{
 		client:    client,
+		namespace: namespace,
 		podEvents: podEvents,
 	}
 }
@@ -37,7 +39,7 @@ func NewPodWatcher(client kubernetes.Interface, podEvents chan<- *PodEvent) *Pod
 // starts listening for events.
 func (p *PodWatcher) Run(ctx context.Context) {
 	informer := cache.NewSharedIndexInformer(
-		cache.NewListWatchFromClient(p.client.CoreV1().RESTClient(), "pods", v1.NamespaceAll, fields.Everything()),
+		cache.NewListWatchFromClient(p.client.CoreV1().RESTClient(), "pods", p.namespace, fields.Everything()),
 		&v1.Pod{},
 		0, // skip resync
 		cache.Indexers{},

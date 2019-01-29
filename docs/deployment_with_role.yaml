@@ -17,9 +17,7 @@ spec:
         application: kube-aws-iam-controller
         version: latest
     spec:
-      tolerations:
-      - key: CriticalAddonsOnly
-        operator: Exists
+      serviceAccount: kube-aws-iam-controller
       containers:
       - name: kube-aws-iam-controller
         image: mikkeloscar/kube-aws-iam-controller:latest
@@ -33,13 +31,19 @@ spec:
           readOnly: true
         resources:
           limits:
-            cpu: 200m
-            memory: 1Gi
+            cpu: 25m
+            memory: 100Mi
           requests:
-            cpu: 100m
-            memory: 512Mi
+            cpu: 25m
+            memory: 100Mi
       volumes:
       - name: aws-iam-credentials
         secret:
-          # secret should be named: aws-iam-<name-of-your-aws-iam-role>
-          secretName: aws-iam-<my-iam-role-name>
+          secretName: kube-aws-iam-controller-iam-role # name of the AWSIAMRole resource
+---
+apiVersion: amazonaws.com/v1
+kind: AWSIAMRole
+metadata:
+  name: kube-aws-iam-controller-iam-role
+spec:
+  roleReference: <arn-of-the-iam-role> # AWS IAM role name or full ARN

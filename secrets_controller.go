@@ -18,6 +18,7 @@ const (
 	heritageLabelKey           = "heritage"
 	awsIAMControllerLabelValue = "kube-aws-iam-controller"
 	secretPrefix               = "aws-iam-"
+	roleARNKey                 = "role-arn"
 	expireKey                  = "expire"
 	credentialsFileKey         = "credentials"
 	credentialsFileTemplate    = `[default]
@@ -46,20 +47,21 @@ type SecretsController struct {
 	creds        CredentialsGetter
 	roleStore    *RoleStore
 	podEvents    <-chan *PodEvent
+	namespace    string
 }
 
 // ProcessCredentials defines the format expected from process credentials.
 // https://docs.aws.amazon.com/cli/latest/topic/config-vars.html#sourcing-credentials-from-external-processes
 type ProcessCredentials struct {
-	Version         int        `json:"Version"`
-	AccessKeyID     string     `json:"AccessKeyId"`
-	SecretAccessKey string     `json:"SecretAccessKey"`
-	SessionToken    string     `json:"SessionToken"`
-	Expiration      *time.Time `json:"Expiration"`
+	Version         int       `json:"Version"`
+	AccessKeyID     string    `json:"AccessKeyId"`
+	SecretAccessKey string    `json:"SecretAccessKey"`
+	SessionToken    string    `json:"SessionToken"`
+	Expiration      time.Time `json:"Expiration"`
 }
 
 // NewSecretsController initializes a new SecretsController.
-func NewSecretsController(client kubernetes.Interface, interval, refreshLimit time.Duration, creds CredentialsGetter, podEvents <-chan *PodEvent) *SecretsController {
+func NewSecretsController(client kubernetes.Interface, namespace string, interval, refreshLimit time.Duration, creds CredentialsGetter, podEvents <-chan *PodEvent) *SecretsController {
 	return &SecretsController{
 		client:       client,
 		interval:     interval,
@@ -67,13 +69,14 @@ func NewSecretsController(client kubernetes.Interface, interval, refreshLimit ti
 		creds:        creds,
 		roleStore:    NewRoleStore(),
 		podEvents:    podEvents,
+		namespace:    namespace,
 	}
 }
 
 // getCreds gets new credentials from the CredentialsGetter and converts them
 // to a secret data map.
 func (c *SecretsController) getCreds(role string) (map[string][]byte, error) {
-	creds, err := c.creds.Get(role)
+	creds, err := c.creds.Get(role, 3600*time.Second)
 	if err != nil {
 		return nil, err
 	}
@@ -152,7 +155,7 @@ func (c *SecretsController) refresh() error {
 		LabelSelector: labels.Set(ownerLabels).AsSelector().String(),
 	}
 
-	secrets, err := c.client.CoreV1().Secrets(v1.NamespaceAll).List(opts)
+	secrets, err := c.client.CoreV1().Secrets(c.namespace).List(opts)
 	if err != nil {
 		return err
 	}
@@ -162,6 +165,11 @@ func (c *SecretsController) refresh() error {
 	tmpSecretStore := NewRoleStore()
 
 	for _, secret := range secrets.Items {
+		// skip secrets owned by someone
+		if len(secret.OwnerReferences) > 0 {
+			continue
+		}
+
 		role := strings.TrimPrefix(secret.Name, secretPrefix)
 
 		// store found secrets in a tmp store so we can lookup missing

@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/sts/stsiface"
 )
 
-// TODO: Assume role ttl
 
 // CredentialsGetter can get credentials.
 type CredentialsGetter interface {
@@ -33,13 +32,15 @@ type Credentials struct {
 type STSCredentialsGetter struct {
 	svc         stsiface.STSAPI
 	baseRoleARN string
+	sessionDuration time.Duration
 }
 
 // NewSTSCredentialsGetter initializes a new STS based credentials fetcher.
-func NewSTSCredentialsGetter(sess *session.Session, baseRoleARN string) *STSCredentialsGetter {
+func NewSTSCredentialsGetter(sess *session.Session, baseRoleARN string, sessionDuration time.Duration) *STSCredentialsGetter {
 	return &STSCredentialsGetter{
 		svc:         sts.New(sess),
 		baseRoleARN: baseRoleARN,
+		sessionDuration: sessionDuration,
 	}
 }
 
@@ -48,10 +49,12 @@ func NewSTSCredentialsGetter(sess *session.Session, baseRoleARN string) *STSCred
 func (c *STSCredentialsGetter) Get(role string) (*Credentials, error) {
 	roleARN := c.baseRoleARN + role
 	roleSessionName := role + "-session"
+	sessionDuration := int64(c.sessionDuration / time.Second)
 
 	params := &sts.AssumeRoleInput{
 		RoleArn:         aws.String(roleARN),
 		RoleSessionName: aws.String(roleSessionName),
+		DurationSeconds: aws.Int64(sessionDuration),
 	}
 
 	resp, err := c.svc.AssumeRole(params)

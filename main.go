@@ -16,19 +16,21 @@ import (
 )
 
 const (
-	defaultInterval       = "10s"
-	defaultRefreshLimit   = "15m"
-	defaultEventQueueSize = "10"
+	defaultInterval        = "10s"
+	defaultRefreshLimit    = "15m"
+	defaultSessionDuration = "60m"
+	defaultEventQueueSize  = "10"
 )
 
 var (
 	config struct {
-		Debug          bool
-		Interval       time.Duration
-		RefreshLimit   time.Duration
-		EventQueueSize int
-		BaseRoleARN    string
-		APIServer      *url.URL
+		Debug           bool
+		Interval        time.Duration
+		RefreshLimit    time.Duration
+		SessionDuration time.Duration
+		EventQueueSize  int
+		BaseRoleARN     string
+		APIServer       *url.URL
 	}
 )
 
@@ -38,6 +40,8 @@ func main() {
 		Default(defaultInterval).DurationVar(&config.Interval)
 	kingpin.Flag("refresh-limit", "Time limit when AWS IAM credentials should be refreshed. I.e. 15 min. before they expire.").
 		Default(defaultRefreshLimit).DurationVar(&config.RefreshLimit)
+	kingpin.Flag("session-duration", "Requested session duration for STS Tokens.").
+		Default(defaultSessionDuration).DurationVar(&config.SessionDuration)
 	kingpin.Flag("event-queue-size", "Size of the pod event queue.").
 		Default(defaultEventQueueSize).IntVar(&config.EventQueueSize)
 	kingpin.Flag("base-role-arn", "Base Role ARN. If not defined it will be autodiscovered from EC2 Metadata.").
@@ -77,7 +81,7 @@ func main() {
 		log.Infof("Autodiscovered Base Role ARN: %s", config.BaseRoleARN)
 	}
 
-	credsGetter := NewSTSCredentialsGetter(awsSess, config.BaseRoleARN)
+	credsGetter := NewSTSCredentialsGetter(awsSess, config.BaseRoleARN, config.SessionDuration)
 
 	stopChs := make([]chan struct{}, 0, 2)
 	podWatcherStopCh := make(chan struct{}, 1)

@@ -9,16 +9,17 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/mikkeloscar/kube-aws-iam-controller/pkg/clientset"
 	log "github.com/sirupsen/logrus"
-	"gopkg.in/alecthomas/kingpin.v2"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
+	kingpin "gopkg.in/alecthomas/kingpin.v2"
+	v1 "k8s.io/api/core/v1"
 )
 
 const (
-	defaultInterval       = "10s"
-	defaultRefreshLimit   = "15m"
-	defaultEventQueueSize = "10"
+	defaultInterval        = "10s"
+	defaultRefreshLimit    = "15m"
+	defaultEventQueueSize  = "10"
+	defaultClientGOTimeout = 30 * time.Second
 )
 
 var (
@@ -29,6 +30,7 @@ var (
 		EventQueueSize int
 		BaseRoleARN    string
 		APIServer      *url.URL
+		Namespace      string
 	}
 )
 
@@ -42,6 +44,8 @@ func main() {
 		Default(defaultEventQueueSize).IntVar(&config.EventQueueSize)
 	kingpin.Flag("base-role-arn", "Base Role ARN. If not defined it will be autodiscovered from EC2 Metadata.").
 		StringVar(&config.BaseRoleARN)
+	kingpin.Flag("namespace", "Limit the controller to a certain namespace.").
+		Default(v1.NamespaceAll).StringVar(&config.Namespace)
 	kingpin.Flag("apiserver", "API server url.").URLVar(&config.APIServer)
 	kingpin.Parse()
 
@@ -49,18 +53,15 @@ func main() {
 		log.SetLevel(log.DebugLevel)
 	}
 
-	var kubeConfig *rest.Config
-
-	if config.APIServer != nil {
-		kubeConfig = &rest.Config{
-			Host: config.APIServer.String(),
-		}
-
+	ctx, cancel := context.WithCancel(context.Background())
+	kubeConfig, err := clientset.ConfigureKubeConfig(config.APIServer, defaultClientGOTimeout, ctx.Done())
+	if err != nil {
+		log.Fatalf("Failed to setup Kubernetes config: %v", err)
 	}
 
-	client, err := kubeClient(kubeConfig)
+	client, err := clientset.NewForConfig(kubeConfig)
 	if err != nil {
-		log.Fatalf("Failed to setup Kubernetes client: %v", err)
+		log.Fatalf("Failed to initialize Kubernetes client: %v.", err)
 	}
 
 	awsSess, err := session.NewSession()
@@ -79,26 +80,30 @@ func main() {
 
 	credsGetter := NewSTSCredentialsGetter(awsSess, config.BaseRoleARN)
 
-	stopChs := make([]chan struct{}, 0, 2)
-	podWatcherStopCh := make(chan struct{}, 1)
-	stopChs = append(stopChs, podWatcherStopCh)
-	controllerStopCh := make(chan struct{}, 1)
-	stopChs = append(stopChs, controllerStopCh)
-
 	podsEventCh := make(chan *PodEvent, config.EventQueueSize)
 
 	controller := NewSecretsController(
 		client,
+		config.Namespace,
 		config.Interval,
 		config.RefreshLimit,
 		credsGetter,
 		podsEventCh,
 	)
 
-	podWatcher := NewPodWatcher(client, podsEventCh)
+	podWatcher := NewPodWatcher(client, config.Namespace, podsEventCh)
 
-	ctx, cancel := context.WithCancel(context.Background())
 	go handleSigterm(cancel)
+
+	awsIAMRoleController := NewAWSIAMRoleController(
+		client,
+		config.Interval,
+		config.RefreshLimit,
+		credsGetter,
+		config.Namespace,
+	)
+
+	go awsIAMRoleController.Run(ctx)
 
 	podWatcher.Run(ctx)
 	controller.Run(ctx)
@@ -111,21 +116,4 @@ func handleSigterm(cancelFunc func()) {
 	<-signals
 	log.Info("Received Term signal. Terminating...")
 	cancelFunc()
-}
-
-func kubeClient(config *rest.Config) (kubernetes.Interface, error) {
-	var err error
-	if config == nil {
-		config, err = rest.InClusterConfig()
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	client, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		return nil, err
-	}
-
-	return client, nil
 }

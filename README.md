@@ -57,30 +57,46 @@ See the [configuration guide for supported SDKs](/docs/sdk-configuration.md).
 
 ## How it works
 
-The controller watches for new pods, if it sees a pod which has an AWS IAM role
-defined it will ensure there is a secret containing credentials for the IAM
-role which can be mounted as a file by the pod.
+The controller continuously looks for custom `AWSIAMRole` resources which
+specify an AWS IAM role by name or by the full ARN. For each resource it finds,
+it will generate/update corresponding secrets containing credentialds for the
+IAM role specified.
+The secrets can be mounted by pods as a file enabling the
+AWS SDKs to use the credentials.
 
-Each secret resource created by the controller will have a label
-`heritage=kube-aws-iam-controller` to indicate that it's owned by the
-controller.
-The controller will continuously pull all secrets with this label and ensure
-the credentials are refreshed before they expire. It will also cleanup secrets
-with credentials which are no longer requested by any pods.
+If an `AWSIAMRole` resource is deleted, the corresponding secret would be
+automatically cleaned up as well.
 
 ### Specifying AWS IAM role on pods
 
 **See the [configuration guide for supported
 SDKs](/docs/sdk-configuration.md)**.
 
-In order to specify that a pod should get a certain AWS IAM role assigned the
-pod spec must include a volume mount from a secret with the following secret
-name pattern: `aws-iam-<you-iam-role-name>`. Further more a volume mount point
-must be defined for each container requiring the role in the pod and each
-container must also have the environment variable
-`AWS_SHARED_CREDENTIALS_FILE=/path/to/mounted/secret` defined. The environment
-variable is used by AWS SDKs and the AWS CLI to automatically find and use the
-credentials file.
+In order to specify that a certain AWS IAM Role should be available for
+applications in a namespace you need to define an `AWSIAMRole` resource which
+references the IAM role you want:
+
+```yaml
+apiVersion: amazonaws.com/v1
+kind: AWSIAMRole
+metadata:
+  name: my-app-iam-role
+spec:
+  # The roleReference allows specifying an AWS IAM role name or arn
+  # Possible values:
+  #   "aws-iam-role-name"
+  #   "arn:aws:iam::<account-id>:role/aws-iam-role-name"
+  roleReference: <my-iam-role-name-or-arn>
+```
+
+The controller will detect the resource and create a corresponding secret with
+the same name containing the role credentials. To use the credentials in a pod
+you simply mount the secret (called `my-app-iam-role` in this example), making
+the credentials available as a file for your application to read and use.
+Additionally you must also define an environment variable
+`AWS_SHARED_CREDENTIALS_FILE=/path/to/mounted/secret` for each container. The
+environment variable is used by AWS SDKs and the AWS CLI to automatically find
+and use the credentials file.
 
 See a full example in [example-app.yaml](/docs/example-app.yaml).
 
@@ -171,7 +187,7 @@ initial credentials and create a secret.
 
 ```sh
 $ export ARN="arn.of.the.iam.role"
-$ kubectl create secret generic aws-iam-<name-of-role> --from-literal "credentials.json=$(./scripts/get_credentials.sh "$ARN")" --from-literal "credentials.process=$(printf "[default]\ncredential_process = cat /meta/aws-iam/credentials.json\n")"
+$ kubectl create secret generic kube-aws-iam-controller-iam-role --from-literal "credentials.json=$(./scripts/get_credentials.sh "$ARN")" --from-literal "credentials.process=$(printf "[default]\ncredential_process = cat /meta/aws-iam/credentials.json\n")"
 ```
 
 Once the secret is created you can deploy the controller using the example

@@ -53,14 +53,20 @@ spec:
       volumes:
       - name: aws-iam-credentials
         secret:
-          # secret should be named: aws-iam-<name-of-your-aws-iam-role>
-          secretName: aws-iam-aws-iam-example
+          secretName: aws-iam-java-example # name of the AWSIAMRole resource
+---
+apiVersion: amazonaws.com/v1
+kind: AWSIAMRole
+metadata:
+  name: aws-iam-java-example
+spec:
+  roleReference: aws-iam-example
 ```
 
 It's important that you set the `AWS_CREDENTIALS_PROFILES_FILE` environment
-variable as shown in the example as well as mount the secret named
-`aws-iam-<name-of-your-iam-role>` into the pod. This secret will be provisioned
-by the **kube-aws-iam-controller**.
+variable as shown in the example as well as mounting the secret named after the
+`AWSIAMRole` resource into the pod under `/meta/aws-iam`. This secret will be
+provisioned by the **kube-aws-iam-controller**.
 
 See full [Java example project](https://github.com/mikkeloscar/kube-aws-iam-controller-java-example).
 
@@ -104,13 +110,19 @@ spec:
       volumes:
       - name: aws-iam-credentials
         secret:
-          # secret should be named: aws-iam-<name-of-your-aws-iam-role>
-          secretName: aws-iam-aws-iam-example
+          secretName: aws-iam-python-example # name of the AWSIAMRole resource
+---
+apiVersion: amazonaws.com/v1
+kind: AWSIAMRole
+metadata:
+  name: aws-iam-python-example
+spec:
+  roleReference: aws-iam-example
 ```
 
 It's important that you set the `AWS_SHARED_CREDENTIALS_FILE` environment
-variable as shown in the example as well as mount the secret named
-`aws-iam-<name-of-your-iam-role>` into the pod under `/meta/aws-iam`. This
+variable as shown in the example as well as mounting the secret named after the
+`AWSIAMRole` resource into the pod under `/meta/aws-iam`. This
 secret will be provisioned by the **kube-aws-iam-controller**.
 
 Also note that for this to work the docker image you use **MUST** contain the
@@ -167,14 +179,20 @@ spec:
       volumes:
       - name: aws-iam-credentials
         secret:
-          # secret should be named: aws-iam-<name-of-your-aws-iam-role>
-          secretName: aws-iam-aws-iam-example
+          secretName: aws-iam-golang-example # name of the AWSIAMRole resource
+---
+apiVersion: amazonaws.com/v1
+kind: AWSIAMRole
+metadata:
+  name: aws-iam-golang-example
+spec:
+  roleReference: aws-iam-example
 ```
 
 It's important that you set the `AWS_SHARED_CREDENTIALS_FILE` environment
-variable as shown in the example as well as mount the secret named
-`aws-iam-<name-of-your-iam-role>` into the pod under `/meta/aws-iam`. This
-secret will be provisioned by the **kube-aws-iam-controller**.
+variable as shown in the example as well as mounting the secret named after the
+`AWSIAMRole` resource into the pod under `/meta/aws-iam`. This secret will be
+provisioned by the **kube-aws-iam-controller**.
 
 Also note that for this to work the docker image you use **MUST** contain the
 program `cat`. [`cat` is called by the SDK to read the credentials from a

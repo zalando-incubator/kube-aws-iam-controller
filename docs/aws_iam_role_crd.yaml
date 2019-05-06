@@ -1,0 +1,110 @@
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: awsiamroles.amazonaws.com
+spec:
+  group: amazonaws.com
+  version: v1
+  scope: Namespaced
+  names:
+    kind: AWSIAMRole
+    singular: awsiamrole
+    plural: awsiamroles
+    categories:
+    - all
+  additionalPrinterColumns:
+  - name: RoleARN
+    type: string
+    description: Full RoleARN
+    JSONPath: .status.roleARN
+  - name: Expiration
+    type: string
+    description: Expiration time of the current credentials provisioned for the role
+    JSONPath: .status.expiration
+  subresources:
+    # status enables the status subresource.
+    status: {}
+  # validation depends on Kubernetes >= v1.11.0
+  validation:
+    openAPIV3Schema:
+      properties:
+        spec:
+          properties:
+            roleReference:
+              description: |
+                Reference to an AWS IAM role which can either be a role name
+                or a full IAM role ARN.
+              type: string
+              minLength: 3
+            roleSessionDuration:
+              description: |
+                Specify the role session duration in seconds. Defaults to 3600
+                seconds (1 hour). This value must be less than or equal to the
+                `MaxSessionDuration` value of the IAM role.
+              type: integer
+              minimum: 900   # 15 minutes
+              maximum: 43200 # 12 hours
+            roleDefinition:
+              properties:
+                AssumeRolePolicyDocument:
+                  properties:
+                    Statement:
+                      type: array
+                      items:
+                        properties:
+                          Action:
+                            type: string
+                          Effect:
+                            type: string
+                          Principal:
+                            properties:
+                              Service:
+                                type: string
+                ManagedPolicyArns:
+                  type: array
+                  items:
+                    type: string
+                # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-role.html#cfn-iam-role-maxsessionduration
+                MaxSessionDuration:
+                  type: integer
+                  minimum: 3600  # 1 hour
+                  maximum: 43200 # 12 hours
+                Path:
+                  type: string
+                PermissionsBoundary:
+                  type: string
+                Policies:
+                  properties:
+                    PolicyName:
+                      type: string
+                    PolicyDocument:
+                      properties:
+                        Version:
+                          type: string
+                          enum: ["2012-10-17"]
+                        Statement:
+                          type: array
+                          items:
+                            properties:
+                              Effect:
+                                type: string
+                                enum: ["Allow", "Deny"]
+                              Action:
+                                type: array
+                                items:
+                                  type: string
+                              Resource:
+                                type: string
+                  required:
+                  - PolicyName
+                  - PolicyDocument
+        status:
+          properties:
+            observedGeneration:
+              type: integer
+            roleARN:
+              type: string
+            expiration:
+              type: string
+      required:
+      - spec

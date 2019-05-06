@@ -15,7 +15,7 @@ type mockCredsGetter struct {
 	creds *Credentials
 }
 
-func (g *mockCredsGetter) Get(role string) (*Credentials, error) {
+func (g *mockCredsGetter) Get(role string, sessionDuration time.Duration) (*Credentials, error) {
 	if g.err != nil {
 		return nil, g.err
 	}
@@ -151,6 +151,7 @@ func TestRefresh(tt *testing.T) {
 		tt.Run(ti.msg, func(t *testing.T) {
 			controller := NewSecretsController(
 				fake.NewSimpleClientset(),
+				v1.NamespaceAll,
 				time.Second,
 				time.Second,
 				&mockCredsGetter{
@@ -158,7 +159,7 @@ func TestRefresh(tt *testing.T) {
 						AccessKeyID:     "access_key_id",
 						SecretAccessKey: "secret_access_key",
 						SessionToken:    "session_token",
-						Expiration:      &timeFuture,
+						Expiration:      timeFuture,
 					},
 				},
 				make(chan *PodEvent, 1),

@@ -12,20 +12,22 @@ import (
 	"github.com/aws/aws-sdk-go/service/sts/stsiface"
 )
 
-// TODO: Assume role ttl
+const (
+	arnPrefix = "arn:aws:iam::"
+)
 
 // CredentialsGetter can get credentials.
 type CredentialsGetter interface {
-	Get(role string) (*Credentials, error)
+	Get(role string, sessionDuration time.Duration) (*Credentials, error)
 }
 
 // Credentials defines fecthed credentials including expiration time.
 type Credentials struct {
-	Role            string
+	RoleARN         string
 	AccessKeyID     string
 	SecretAccessKey string
 	SessionToken    string
-	Expiration      *time.Time
+	Expiration      time.Time
 }
 
 // STSCredentialsGetter is a credentials getter for getting credentials from
@@ -45,13 +47,17 @@ func NewSTSCredentialsGetter(sess *session.Session, baseRoleARN string) *STSCred
 
 // Get gets new credentials for the specified role. The credentials are fetched
 // via STS.
-func (c *STSCredentialsGetter) Get(role string) (*Credentials, error) {
+func (c *STSCredentialsGetter) Get(role string, sessionDuration time.Duration) (*Credentials, error) {
 	roleARN := c.baseRoleARN + role
-	roleSessionName := role + "-session"
+	if strings.HasPrefix(role, arnPrefix) {
+		roleARN = role
+	}
+	roleSessionName := normalizeRoleARN(roleARN) + "-session"
 
 	params := &sts.AssumeRoleInput{
 		RoleArn:         aws.String(roleARN),
 		RoleSessionName: aws.String(roleSessionName),
+		DurationSeconds: aws.Int64(int64(sessionDuration.Seconds())),
 	}
 
 	resp, err := c.svc.AssumeRole(params)
@@ -60,10 +66,11 @@ func (c *STSCredentialsGetter) Get(role string) (*Credentials, error) {
 	}
 
 	return &Credentials{
+		RoleARN:         roleARN,
 		AccessKeyID:     aws.StringValue(resp.Credentials.AccessKeyId),
 		SecretAccessKey: aws.StringValue(resp.Credentials.SecretAccessKey),
 		SessionToken:    aws.StringValue(resp.Credentials.SessionToken),
-		Expiration:      resp.Credentials.Expiration,
+		Expiration:      aws.TimeValue(resp.Credentials.Expiration),
 	}, nil
 }
 
@@ -83,4 +90,13 @@ func GetBaseRoleARN(sess *session.Session) (string, error) {
 	}
 
 	return fmt.Sprintf("%s/", baseRoleARN[0]), nil
+}
+
+// normalizeRoleARN normalizes a role ARN by substituting special characters
+// with characters allowed for a RoleSessionName according to:
+// https://docs.aws.amazon.com/STS/latest/APIReference/API_AssumeRole.html
+func normalizeRoleARN(roleARN string) string {
+	roleARN = strings.Replace(roleARN, ":", "_", -1)
+	roleARN = strings.Replace(roleARN, "/", ".", -1)
+	return roleARN
 }

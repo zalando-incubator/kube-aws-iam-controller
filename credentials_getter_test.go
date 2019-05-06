@@ -27,7 +27,7 @@ func (sts *mockSTSAPI) AssumeRole(*sts.AssumeRoleInput) (*sts.AssumeRoleOutput, 
 
 func TestGet(t *testing.T) {
 	sess := session.New(&aws.Config{Region: aws.String("region")})
-	getter := NewSTSCredentialsGetter(sess, "")
+	getter := NewSTSCredentialsGetter(sess, "", 1 * time.Hour)
 	getter.svc = &mockSTSAPI{
 		err: nil,
 		assumeRoleResp: &sts.AssumeRoleOutput{

@@ -20,6 +20,7 @@ spec:
       tolerations:
       - key: CriticalAddonsOnly
         operator: Exists
+      serviceAccountName: kube-aws-iam-controller
       containers:
       - name: kube-aws-iam-controller
         image: mikkeloscar/kube-aws-iam-controller:latest

@@ -91,12 +91,13 @@ can inject the required configuration automatically.
 
 ## Setup
 
-The `kube-aws-iam-controller` can be run as a deployment in the cluster.
-See [deployment.yaml](/docs/deployment.yaml).
+The `kube-aws-iam-controller` can be run as a deployment and needs clusterRole for pods and secrets.
+See [deployment.yaml](/docs/deployment.yaml), [rbac.yaml](/docs/rbac.yaml).
 
 Deploy it by running:
 
 ```bash
+$ kubectl apply -f docs/rbac.yaml
 $ kubectl apply -f docs/deployment.yaml
 ```
 

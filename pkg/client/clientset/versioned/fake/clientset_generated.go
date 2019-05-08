@@ -75,3 +75,8 @@ var _ clientset.Interface = &Clientset{}
 func (c *Clientset) AmazonawsV1() amazonawsv1.AmazonawsV1Interface {
 	return &fakeamazonawsv1.FakeAmazonawsV1{Fake: &c.Fake}
 }
+
+// Amazonaws retrieves the AmazonawsV1Client
+func (c *Clientset) Amazonaws() amazonawsv1.AmazonawsV1Interface {
+	return &fakeamazonawsv1.FakeAmazonawsV1{Fake: &c.Fake}
+}

@@ -40,7 +40,8 @@ func TestGet(t *testing.T) {
 		},
 	}
 
-	creds, err := getter.Get("role", 3600*time.Second)
+	roleARN := "arn:aws:iam::012345678910:role/role-name"
+	creds, err := getter.Get(roleARN, 3600*time.Second)
 	require.NoError(t, err)
 	require.Equal(t, "access_key_id", creds.AccessKeyID)
 	require.Equal(t, "secret_access_key", creds.SecretAccessKey)
@@ -58,3 +59,18 @@ func TestGet(t *testing.T) {
 // 	sess := &session.Session{}
 // 	baseRole, err := GetBaseRoleARN(sess)
 // }
+
+func TestNormalizeRoleARN(t *testing.T) {
+	roleARN := "arn:aws:iam::012345678910:role/role-name"
+	expectedARN := "012345678910.role-name"
+	normalized, err := normalizeRoleARN(roleARN)
+	require.NoError(t, err)
+	require.Equal(t, expectedARN, normalized)
+
+	// truncate long role names
+	roleARN = "arn:aws:iam::012345678910:role/role-name-very-very-very-very-very-very-very-very-long"
+	expectedARN = "012345678910.role-name-very-very-very-very-very-very-very-very-l"
+	normalized, err = normalizeRoleARN(roleARN)
+	require.NoError(t, err)
+	require.Equal(t, expectedARN, normalized)
+}

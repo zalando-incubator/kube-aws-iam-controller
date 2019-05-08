@@ -28,6 +28,8 @@ import (
 type Interface interface {
 	Discovery() discovery.DiscoveryInterface
 	AmazonawsV1() amazonawsv1.AmazonawsV1Interface
+	// Deprecated: please explicitly pick a version if possible.
+	Amazonaws() amazonawsv1.AmazonawsV1Interface
 }
 
 // Clientset contains the clients for groups. Each group has exactly one
@@ -39,6 +41,12 @@ type Clientset struct {
 
 // AmazonawsV1 retrieves the AmazonawsV1Client
 func (c *Clientset) AmazonawsV1() amazonawsv1.AmazonawsV1Interface {
+	return c.amazonawsV1
+}
+
+// Deprecated: Amazonaws retrieves the default version of AmazonawsClient.
+// Please explicitly pick a version.
+func (c *Clientset) Amazonaws() amazonawsv1.AmazonawsV1Interface {
 	return c.amazonawsV1
 }
 

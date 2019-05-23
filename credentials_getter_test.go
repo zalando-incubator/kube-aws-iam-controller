@@ -60,17 +60,37 @@ func TestGet(t *testing.T) {
 // 	baseRole, err := GetBaseRoleARN(sess)
 // }
 
-func TestNormalizeRoleARN(t *testing.T) {
-	roleARN := "arn:aws:iam::012345678910:role/role-name"
-	expectedARN := "012345678910.role-name"
-	normalized, err := normalizeRoleARN(roleARN)
-	require.NoError(t, err)
-	require.Equal(t, expectedARN, normalized)
-
-	// truncate long role names
-	roleARN = "arn:aws:iam::012345678910:role/role-name-very-very-very-very-very-very-very-very-long"
-	expectedARN = "012345678910.role-name-very-very-very-very-very-very-very-very-l"
-	normalized, err = normalizeRoleARN(roleARN)
-	require.NoError(t, err)
-	require.Equal(t, expectedARN, normalized)
+func TestNormalizeRoleARN(tt *testing.T) {
+	for _, tc := range []struct {
+		msg         string
+		roleARN     string
+		expectedARN string
+	}{
+		{
+			msg:         "simple role",
+			roleARN:     "arn:aws:iam::012345678910:role/role-name",
+			expectedARN: "012345678910.role-name",
+		},
+		{
+			msg:         "truncate long role names",
+			roleARN:     "arn:aws:iam::012345678910:role/role-name-very-very-very-very-very-very-very-very-long",
+			expectedARN: "012345678910.role-name-very-very-very-very-very-very-very-very-l",
+		},
+		{
+			msg:         "role name with path",
+			roleARN:     "arn:aws:iam::012345678910:role/path-name/role-name",
+			expectedARN: "012345678910.path-name.role-name",
+		},
+		{
+			msg:         "truncate path for long role names",
+			roleARN:     "arn:aws:iam::012345678910:role/aaaaa/bbbbb/ccccccccccccccccccccccccccccccccccccc-role-name",
+			expectedARN: "012345678910.a.b.ccccccccccccccccccccccccccccccccccccc-role-name",
+		},
+	} {
+		tt.Run(tc.msg, func(t *testing.T) {
+			normalized, err := normalizeRoleARN(tc.roleARN)
+			require.NoError(t, err)
+			require.Equal(t, tc.expectedARN, normalized)
+		})
+	}
 }

@@ -103,20 +103,37 @@ func GetBaseRoleARN(sess *session.Session) (string, error) {
 // https://docs.aws.amazon.com/STS/latest/APIReference/API_AssumeRole.html
 func normalizeRoleARN(roleARN string) (string, error) {
 	parts := strings.Split(roleARN, "/")
-	if len(parts) != 2 {
+	if len(parts) < 2 {
 		return "", fmt.Errorf("invalid roleARN: %s", roleARN)
 	}
+
+	remainingChars := roleSessionNameMaxSize
 
 	accountID := strings.TrimPrefix(parts[0], arnPrefix)
 	accountID = strings.TrimSuffix(accountID, roleARNSuffix)
 
-	roleName := strings.Replace(parts[1], ":", "_", -1)
-	roleName = strings.Replace(roleName, "/", ".", -1)
+	remainingChars -= len(accountID)
 
-	roleNameMaxSize := roleSessionNameMaxSize - 1 - len(accountID)
+	return accountID + normalizePath(parts[1:], remainingChars), nil
+}
 
-	if len(roleName) > roleNameMaxSize {
-		roleName = roleName[:roleNameMaxSize]
+// normalizePath normalizes the path levels into a roleSession valid string.
+// The last level always gets as many chars as possible leaving only a minimum
+// of one char for each of the other levels.
+// e.g. given the levels: ["aaaaa", "bbbbb", "ccccccc"], and remaining "12" it
+// would be reduced to the string: ".a.b.ccccccc"
+func normalizePath(levels []string, remaining int) string {
+	if len(levels) == 0 {
+		return ""
 	}
-	return accountID + "." + roleName, nil
+
+	last := levels[len(levels)-1]
+	last = strings.Replace(last, ":", "_", -1)
+	otherLevels := len(levels[:len(levels)-1])
+	maxName := remaining - (otherLevels * 2) - 1
+
+	if len(last) > maxName {
+		last = last[:maxName]
+	}
+	return normalizePath(levels[:len(levels)-1], remaining-len(last)-1) + "." + last
 }

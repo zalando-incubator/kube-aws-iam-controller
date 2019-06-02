@@ -8,6 +8,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials/stscreds"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/mikkeloscar/kube-aws-iam-controller/pkg/clientset"
 	log "github.com/sirupsen/logrus"
@@ -31,6 +33,7 @@ var (
 		BaseRoleARN    string
 		APIServer      *url.URL
 		Namespace      string
+		AssumeRoleARN  string
 	}
 )
 
@@ -44,6 +47,8 @@ func main() {
 		Default(defaultEventQueueSize).IntVar(&config.EventQueueSize)
 	kingpin.Flag("base-role-arn", "Base Role ARN. If not defined it will be autodiscovered from EC2 Metadata.").
 		StringVar(&config.BaseRoleARN)
+	kingpin.Flag("assume-role-arn", "Assume Role ARN can be specified to assume a role at start-up which is used for further assuming other roles managed by the controller.").
+		StringVar(&config.AssumeRoleARN)
 	kingpin.Flag("namespace", "Limit the controller to a certain namespace.").
 		Default(v1.NamespaceAll).StringVar(&config.Namespace)
 	kingpin.Flag("apiserver", "API server url.").URLVar(&config.APIServer)
@@ -66,7 +71,7 @@ func main() {
 
 	awsSess, err := session.NewSession()
 	if err != nil {
-		log.Fatalf("Failed to setup Kubernetes client: %v", err)
+		log.Fatalf("Failed to setup AWS session: %v", err)
 	}
 
 	if config.BaseRoleARN == "" {
@@ -78,7 +83,13 @@ func main() {
 		log.Infof("Autodiscovered Base Role ARN: %s", config.BaseRoleARN)
 	}
 
-	credsGetter := NewSTSCredentialsGetter(awsSess, config.BaseRoleARN)
+	awsConfigs := make([]*aws.Config, 0)
+	if config.AssumeRoleARN != "" {
+		creds := stscreds.NewCredentials(awsSess, config.AssumeRoleARN)
+		awsConfigs = append(awsConfigs, &aws.Config{Credentials: creds})
+	}
+
+	credsGetter := NewSTSCredentialsGetter(awsSess, config.BaseRoleARN, awsConfigs...)
 
 	podsEventCh := make(chan *PodEvent, config.EventQueueSize)
 

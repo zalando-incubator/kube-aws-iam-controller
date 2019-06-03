@@ -5,6 +5,7 @@ import (
 	"net/url"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -33,7 +34,7 @@ var (
 		BaseRoleARN    string
 		APIServer      *url.URL
 		Namespace      string
-		AssumeRoleARN  string
+		AssumeRole     string
 	}
 )
 
@@ -47,8 +48,8 @@ func main() {
 		Default(defaultEventQueueSize).IntVar(&config.EventQueueSize)
 	kingpin.Flag("base-role-arn", "Base Role ARN. If not defined it will be autodiscovered from EC2 Metadata.").
 		StringVar(&config.BaseRoleARN)
-	kingpin.Flag("assume-role-arn", "Assume Role ARN can be specified to assume a role at start-up which is used for further assuming other roles managed by the controller.").
-		StringVar(&config.AssumeRoleARN)
+	kingpin.Flag("assume-role", "Assume Role can be specified to assume a role at start-up which is used for further assuming other roles managed by the controller.").
+		StringVar(&config.AssumeRole)
 	kingpin.Flag("namespace", "Limit the controller to a certain namespace.").
 		Default(v1.NamespaceAll).StringVar(&config.Namespace)
 	kingpin.Flag("apiserver", "API server url.").URLVar(&config.APIServer)
@@ -61,7 +62,7 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	kubeConfig, err := clientset.ConfigureKubeConfig(config.APIServer, defaultClientGOTimeout, ctx.Done())
 	if err != nil {
-		log.Fatalf("Failed to setup Kubernetes config: %v", err)
+		log.Fatalf("Failed to set up Kubernetes config: %v", err)
 	}
 
 	client, err := clientset.NewForConfig(kubeConfig)
@@ -71,7 +72,7 @@ func main() {
 
 	awsSess, err := session.NewSession()
 	if err != nil {
-		log.Fatalf("Failed to setup AWS session: %v", err)
+		log.Fatalf("Failed to set up AWS session: %v", err)
 	}
 
 	if config.BaseRoleARN == "" {
@@ -83,9 +84,13 @@ func main() {
 		log.Infof("Autodiscovered Base Role ARN: %s", config.BaseRoleARN)
 	}
 
-	awsConfigs := make([]*aws.Config, 0)
-	if config.AssumeRoleARN != "" {
-		creds := stscreds.NewCredentials(awsSess, config.AssumeRoleARN)
+	awsConfigs := make([]*aws.Config, 0, 1)
+	if config.AssumeRole != "" {
+		if !strings.HasPrefix(config.AssumeRole, arnPrefix) {
+			config.AssumeRole = config.BaseRoleARN + config.AssumeRole
+		}
+		log.Infof("Using custom Assume Role: %s", config.AssumeRole)
+		creds := stscreds.NewCredentials(awsSess, config.AssumeRole)
 		awsConfigs = append(awsConfigs, &aws.Config{Credentials: creds})
 	}
 

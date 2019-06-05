@@ -105,6 +105,180 @@ It is currently moving a lot of effort on to the users defining the pod specs.
 A future idea is to make the controller act as an admission controller which
 can inject the required configuration automatically.
 
+### Setting up AWS IAM roles
+
+The controller does not take care of AWS IAM role provisioning and assumes that
+the user provisions AWS IAM roles manually, for instance via
+[CloudFormation](https://aws.amazon.com/cloudformation/) or
+[Terraform](https://www.terraform.io/).
+
+Here is an example of an AWS IAM role defined via CloudFormation:
+
+```yaml
+Parameters:
+  AssumeRoleARN: 
+    Description: "Role ARN of the role used by kube-aws-iam-controller"
+    Type: String
+Metadata:
+  StackName: "aws-iam-example"
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Example IAM Role"
+Resources:
+  IAMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: "aws-iam-example"
+      Path: /
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action: sts:AssumeRole
+          Effect: Allow
+          Principal:
+            AWS: !Ref "AssumeRoleARN"
+        Version: '2012-10-17'
+      Policies:
+      - PolicyName:  "policy"
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - "ec2:Describe*"
+            Resource: "*"
+```
+
+The role could be created via:
+
+```sh
+# $ASSUME_ROLE_ARN is the ARN of the role used by the kube-aws-iam-controller deployment
+$ aws cloudformation create-stack --stack-name aws-iam-example \
+  --parameters "ParameterKey=AssumeRoleARN,ParameterValue=$ASSUME_ROLE_ARN" \
+  --template-body=file://iam-role.yaml --capabilities CAPABILITY_NAMED_IAM
+```
+
+The important part is the `AssumeRolePolicyDocument`:
+
+```yaml
+AssumeRolePolicyDocument:
+  Statement:
+  - Action: sts:AssumeRole
+    Effect: Allow
+    Principal:
+      AWS: !Ref "AssumeRoleARN"
+  Version: '2012-10-17'
+```
+
+This allows the `kube-aws-iam-controller` to assume the role and provide
+credentials on behalf of the application requesting credentials via an
+`AWSIAMRole` resource in the cluster.
+
+The `AssumeRoleARN` is the ARN of the role which the `kube-aws-iam-controller`
+is running with. Usually this would be the instance role of the EC2 instance
+were the controller is running.
+
+#### Using custom Assume role
+
+Sometimes it's desirable to let the controller assume roles with a specific
+role dedicated for that task i.e. a role different from the instance role. The
+controller allows specifying such a role via the
+`--assume-role=<controller-role>` flag providing the following setup:
+
+```
+                                                                           +-------------+
+                                                                           |             |
+                                                                      +--> | <app-role1> |
++-----------------+                +-------------------+              |    |             |
+|                 |                |                   |              |    +-------------+
+| <instance-role> | -- assumes --> | <controller-role> | -- assumes --+
+|                 |                |                   |              |    +-------------+
++-----------------+                +-------------------+              |    |             |
+                                                                      +--> | <app-role2> |
+                                                                           |             |
+                                                                           +-------------+
+```
+
+In this case the `<instance-role>` will only be used for the initial assuming
+of the `<controller-role>` and all `<app-role>s` are assumed by the
+`<controller-role>`. This makes it possible to have many different
+`<instance-role>s` while the `<app-role>s` only have to trust the single static
+`<controller-role>`. If you don't specify `--assume-role` then the
+`<instance-role>` would have to assume the `<app-role>s`.
+
+Here is an example of the AWS IAM roles defined for this set-up to work:
+
+```yaml
+Metadata:
+  StackName: "aws-iam-assume-role-example"
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Example AWS IAM Assume Role"
+Resources:
+  InstanceIAMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: "instance-role"
+      Path: /
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action: sts:AssumeRole
+          Effect: Allow
+          Principal:
+            Service: ec2.amazonaws.com
+        Version: '2012-10-17'
+      Policies:
+      - PolicyName:  "policy"
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - "sts:AssumeRole"
+            Resource: "*"
+
+  KubeAWSIAMControllerIAMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: "kube-aws-iam-controller"
+      Path: /
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action: sts:AssumeRole
+          Effect: Allow
+          Principal:
+            AWS: !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${InstanceIAMRole}'
+        Version: '2012-10-17'
+      Policies:
+      - PolicyName:  "policy"
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - "sts:AssumeRole"
+            Resource: "*"
+
+  APPIAMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: "app-role"
+      Path: /
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action: sts:AssumeRole
+          Effect: Allow
+          Principal:
+            AWS: !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${KubeAWSIAMControllerIAMRole}'
+        Version: '2012-10-17'
+      Policies:
+      - PolicyName:  "policy"
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - "ec2:Describe*"
+            Resource: "*"
+```
+
 ## Setup
 
 The `kube-aws-iam-controller` can be run as a deployment in the cluster.

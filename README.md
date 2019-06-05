@@ -108,7 +108,7 @@ can inject the required configuration automatically.
 ### Setting up AWS IAM roles
 
 The controller does not take care of AWS IAM role provisioning and assumes that
-the user provisions AWS IAM roles manually for instance via
+the user provisions AWS IAM roles manually, for instance via
 [CloudFormation](https://aws.amazon.com/cloudformation/) or
 [Terraform](https://www.terraform.io/).
 
@@ -150,7 +150,7 @@ Resources:
 The role could be created via:
 
 ```sh
-# $ASSUME_ROLE_ARN is the arn of the role used by the kube-aws-iam-controller deployment
+# $ASSUME_ROLE_ARN is the ARN of the role used by the kube-aws-iam-controller deployment
 $ aws cloudformation create-stack --stack-name aws-iam-example \
   --parameters "ParameterKey=AssumeRoleARN,ParameterValue=$ASSUME_ROLE_ARN" \
   --template-body=file://iam-role.yaml --capabilities CAPABILITY_NAMED_IAM
@@ -199,7 +199,9 @@ controller allows specifying such a role via the
 
 In this case the `<instance-role>` will only be used for the initial assuming
 of the `<controller-role>` and all `<app-role>s` are assumed by the
-`<controller-role>`.  If you don't specify `--assume-role` then the
+`<controller-role>`. This makes it possible to have many different
+`<instance-role>s` while the `<app-role>s` only have to trust the single static
+`<controller-role>`. If you don't specify `--assume-role` then the
 `<instance-role>` would have to assume the `<app-role>s`.
 
 Here is an example of the AWS IAM roles defined for this set-up to work:

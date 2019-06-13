@@ -55,7 +55,7 @@ spec:
         secret:
           secretName: aws-iam-java-example # name of the AWSIAMRole resource
 ---
-apiVersion: amazonaws.com/v1
+apiVersion: zalando.org/v1
 kind: AWSIAMRole
 metadata:
   name: aws-iam-java-example
@@ -112,7 +112,7 @@ spec:
         secret:
           secretName: aws-iam-python-example # name of the AWSIAMRole resource
 ---
-apiVersion: amazonaws.com/v1
+apiVersion: zalando.org/v1
 kind: AWSIAMRole
 metadata:
   name: aws-iam-python-example
@@ -181,7 +181,7 @@ spec:
         secret:
           secretName: aws-iam-golang-example # name of the AWSIAMRole resource
 ---
-apiVersion: amazonaws.com/v1
+apiVersion: zalando.org/v1
 kind: AWSIAMRole
 metadata:
   name: aws-iam-golang-example

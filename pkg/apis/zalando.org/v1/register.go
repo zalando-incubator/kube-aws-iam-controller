@@ -1,7 +1,7 @@
 package v1
 
 import (
-	amazonaws "github.com/mikkeloscar/kube-aws-iam-controller/pkg/apis/amazonaws.com"
+	zalando "github.com/mikkeloscar/kube-aws-iam-controller/pkg/apis/zalando.org"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -15,7 +15,7 @@ var (
 )
 
 // SchemeGroupVersion is the group version used to register these objects.
-var SchemeGroupVersion = schema.GroupVersion{Group: amazonaws.GroupName, Version: "v1"}
+var SchemeGroupVersion = schema.GroupVersion{Group: zalando.GroupName, Version: "v1"}
 
 // Resource takes an unqualified resource and returns a Group-qualified GroupResource.
 func Resource(resource string) schema.GroupResource {

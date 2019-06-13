@@ -20,8 +20,8 @@ package fake
 
 import (
 	clientset "github.com/mikkeloscar/kube-aws-iam-controller/pkg/client/clientset/versioned"
-	amazonawsv1 "github.com/mikkeloscar/kube-aws-iam-controller/pkg/client/clientset/versioned/typed/amazonaws.com/v1"
-	fakeamazonawsv1 "github.com/mikkeloscar/kube-aws-iam-controller/pkg/client/clientset/versioned/typed/amazonaws.com/v1/fake"
+	zalandov1 "github.com/mikkeloscar/kube-aws-iam-controller/pkg/client/clientset/versioned/typed/zalando.org/v1"
+	fakezalandov1 "github.com/mikkeloscar/kube-aws-iam-controller/pkg/client/clientset/versioned/typed/zalando.org/v1/fake"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/discovery"
@@ -71,12 +71,12 @@ func (c *Clientset) Discovery() discovery.DiscoveryInterface {
 
 var _ clientset.Interface = &Clientset{}
 
-// AmazonawsV1 retrieves the AmazonawsV1Client
-func (c *Clientset) AmazonawsV1() amazonawsv1.AmazonawsV1Interface {
-	return &fakeamazonawsv1.FakeAmazonawsV1{Fake: &c.Fake}
+// ZalandoV1 retrieves the ZalandoV1Client
+func (c *Clientset) ZalandoV1() zalandov1.ZalandoV1Interface {
+	return &fakezalandov1.FakeZalandoV1{Fake: &c.Fake}
 }
 
-// Amazonaws retrieves the AmazonawsV1Client
-func (c *Clientset) Amazonaws() amazonawsv1.AmazonawsV1Interface {
-	return &fakeamazonawsv1.FakeAmazonawsV1{Fake: &c.Fake}
+// Zalando retrieves the ZalandoV1Client
+func (c *Clientset) Zalando() zalandov1.ZalandoV1Interface {
+	return &fakezalandov1.FakeZalandoV1{Fake: &c.Fake}
 }

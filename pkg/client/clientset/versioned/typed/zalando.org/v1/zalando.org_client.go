@@ -19,28 +19,28 @@ limitations under the License.
 package v1
 
 import (
-	v1 "github.com/mikkeloscar/kube-aws-iam-controller/pkg/apis/amazonaws.com/v1"
+	v1 "github.com/mikkeloscar/kube-aws-iam-controller/pkg/apis/zalando.org/v1"
 	"github.com/mikkeloscar/kube-aws-iam-controller/pkg/client/clientset/versioned/scheme"
 	serializer "k8s.io/apimachinery/pkg/runtime/serializer"
 	rest "k8s.io/client-go/rest"
 )
 
-type AmazonawsV1Interface interface {
+type ZalandoV1Interface interface {
 	RESTClient() rest.Interface
 	AWSIAMRolesGetter
 }
 
-// AmazonawsV1Client is used to interact with features provided by the amazonaws.com group.
-type AmazonawsV1Client struct {
+// ZalandoV1Client is used to interact with features provided by the zalando.org group.
+type ZalandoV1Client struct {
 	restClient rest.Interface
 }
 
-func (c *AmazonawsV1Client) AWSIAMRoles(namespace string) AWSIAMRoleInterface {
+func (c *ZalandoV1Client) AWSIAMRoles(namespace string) AWSIAMRoleInterface {
 	return newAWSIAMRoles(c, namespace)
 }
 
-// NewForConfig creates a new AmazonawsV1Client for the given config.
-func NewForConfig(c *rest.Config) (*AmazonawsV1Client, error) {
+// NewForConfig creates a new ZalandoV1Client for the given config.
+func NewForConfig(c *rest.Config) (*ZalandoV1Client, error) {
 	config := *c
 	if err := setConfigDefaults(&config); err != nil {
 		return nil, err
@@ -49,12 +49,12 @@ func NewForConfig(c *rest.Config) (*AmazonawsV1Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &AmazonawsV1Client{client}, nil
+	return &ZalandoV1Client{client}, nil
 }
 
-// NewForConfigOrDie creates a new AmazonawsV1Client for the given config and
+// NewForConfigOrDie creates a new ZalandoV1Client for the given config and
 // panics if there is an error in the config.
-func NewForConfigOrDie(c *rest.Config) *AmazonawsV1Client {
+func NewForConfigOrDie(c *rest.Config) *ZalandoV1Client {
 	client, err := NewForConfig(c)
 	if err != nil {
 		panic(err)
@@ -62,9 +62,9 @@ func NewForConfigOrDie(c *rest.Config) *AmazonawsV1Client {
 	return client
 }
 
-// New creates a new AmazonawsV1Client for the given RESTClient.
-func New(c rest.Interface) *AmazonawsV1Client {
-	return &AmazonawsV1Client{c}
+// New creates a new ZalandoV1Client for the given RESTClient.
+func New(c rest.Interface) *ZalandoV1Client {
+	return &ZalandoV1Client{c}
 }
 
 func setConfigDefaults(config *rest.Config) error {
@@ -82,7 +82,7 @@ func setConfigDefaults(config *rest.Config) error {
 
 // RESTClient returns a RESTClient that is used to communicate
 // with API server by this client implementation.
-func (c *AmazonawsV1Client) RESTClient() rest.Interface {
+func (c *ZalandoV1Client) RESTClient() rest.Interface {
 	if c == nil {
 		return nil
 	}

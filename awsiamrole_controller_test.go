@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	av1 "github.com/mikkeloscar/kube-aws-iam-controller/pkg/apis/amazonaws.com/v1"
+	av1 "github.com/mikkeloscar/kube-aws-iam-controller/pkg/apis/zalando.org/v1"
 	fakeAWS "github.com/mikkeloscar/kube-aws-iam-controller/pkg/client/clientset/versioned/fake"
 	"github.com/mikkeloscar/kube-aws-iam-controller/pkg/clientset"
 	"github.com/stretchr/testify/require"
@@ -17,7 +17,7 @@ import (
 func TestIsOwnedReference(t *testing.T) {
 	owner := av1.AWSIAMRole{
 		TypeMeta: metav1.TypeMeta{
-			APIVersion: "amazonaws.com/v1",
+			APIVersion: "zalando.org/v1",
 			Kind:       "AWSIAMRole",
 		},
 		ObjectMeta: metav1.ObjectMeta{
@@ -152,7 +152,7 @@ func TestRefreshAWSIAMRole(tt *testing.T) {
 			client := clientset.NewClientset(kubeClient, awsKubeClient)
 
 			for _, role := range tc.awsIAMRoles {
-				_, err := client.AmazonawsV1().AWSIAMRoles("default").Create(&role)
+				_, err := client.ZalandoV1().AWSIAMRoles("default").Create(&role)
 				require.NoError(t, err)
 			}
 

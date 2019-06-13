@@ -24,8 +24,8 @@ import (
 	time "time"
 
 	versioned "github.com/mikkeloscar/kube-aws-iam-controller/pkg/client/clientset/versioned"
-	amazonawscom "github.com/mikkeloscar/kube-aws-iam-controller/pkg/client/informers/externalversions/amazonaws.com"
 	internalinterfaces "github.com/mikkeloscar/kube-aws-iam-controller/pkg/client/informers/externalversions/internalinterfaces"
+	zalandoorg "github.com/mikkeloscar/kube-aws-iam-controller/pkg/client/informers/externalversions/zalando.org"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
@@ -172,9 +172,9 @@ type SharedInformerFactory interface {
 	ForResource(resource schema.GroupVersionResource) (GenericInformer, error)
 	WaitForCacheSync(stopCh <-chan struct{}) map[reflect.Type]bool
 
-	Amazonaws() amazonawscom.Interface
+	Zalando() zalandoorg.Interface
 }
 
-func (f *sharedInformerFactory) Amazonaws() amazonawscom.Interface {
-	return amazonawscom.New(f, f.namespace, f.tweakListOptions)
+func (f *sharedInformerFactory) Zalando() zalandoorg.Interface {
+	return zalandoorg.New(f, f.namespace, f.tweakListOptions)
 }

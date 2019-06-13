@@ -7,7 +7,7 @@ import (
 	"time"
 
 	awsiamrole "github.com/mikkeloscar/kube-aws-iam-controller/pkg/client/clientset/versioned"
-	amazonawsv1 "github.com/mikkeloscar/kube-aws-iam-controller/pkg/client/clientset/versioned/typed/amazonaws.com/v1"
+	zalandov1 "github.com/mikkeloscar/kube-aws-iam-controller/pkg/client/clientset/versioned/typed/zalando.org/v1"
 	discovery "k8s.io/client-go/discovery"
 	"k8s.io/client-go/kubernetes"
 	admissionregistrationv1alpha1 "k8s.io/client-go/kubernetes/typed/admissionregistration/v1alpha1"
@@ -116,7 +116,7 @@ type Interface interface {
 	// Deprecated: please explicitly pick a version if possible.
 	Storage() storagev1.StorageV1Interface
 	StorageV1alpha1() storagev1alpha1.StorageV1alpha1Interface
-	AmazonawsV1() amazonawsv1.AmazonawsV1Interface
+	ZalandoV1() zalandov1.ZalandoV1Interface
 }
 
 type Clientset struct {
@@ -145,8 +145,8 @@ func NewForConfig(kubeconfig *rest.Config) (*Clientset, error) {
 	return &Clientset{kubeClient, awsIAMRoleClient}, nil
 }
 
-func (c *Clientset) AmazonawsV1() amazonawsv1.AmazonawsV1Interface {
-	return c.awsiamrole.AmazonawsV1()
+func (c *Clientset) ZalandoV1() zalandov1.ZalandoV1Interface {
+	return c.awsiamrole.ZalandoV1()
 }
 
 // ConfigureKubeConfig configures a kubeconfig.

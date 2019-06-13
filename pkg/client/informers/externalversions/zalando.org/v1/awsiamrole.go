@@ -21,10 +21,10 @@ package v1
 import (
 	time "time"
 
-	amazonawscomv1 "github.com/mikkeloscar/kube-aws-iam-controller/pkg/apis/amazonaws.com/v1"
+	zalandoorgv1 "github.com/mikkeloscar/kube-aws-iam-controller/pkg/apis/zalando.org/v1"
 	versioned "github.com/mikkeloscar/kube-aws-iam-controller/pkg/client/clientset/versioned"
 	internalinterfaces "github.com/mikkeloscar/kube-aws-iam-controller/pkg/client/informers/externalversions/internalinterfaces"
-	v1 "github.com/mikkeloscar/kube-aws-iam-controller/pkg/client/listers/amazonaws.com/v1"
+	v1 "github.com/mikkeloscar/kube-aws-iam-controller/pkg/client/listers/zalando.org/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
@@ -61,16 +61,16 @@ func NewFilteredAWSIAMRoleInformer(client versioned.Interface, namespace string,
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.AmazonawsV1().AWSIAMRoles(namespace).List(options)
+				return client.ZalandoV1().AWSIAMRoles(namespace).List(options)
 			},
 			WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.AmazonawsV1().AWSIAMRoles(namespace).Watch(options)
+				return client.ZalandoV1().AWSIAMRoles(namespace).Watch(options)
 			},
 		},
-		&amazonawscomv1.AWSIAMRole{},
+		&zalandoorgv1.AWSIAMRole{},
 		resyncPeriod,
 		indexers,
 	)
@@ -81,7 +81,7 @@ func (f *aWSIAMRoleInformer) defaultInformer(client versioned.Interface, resyncP
 }
 
 func (f *aWSIAMRoleInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&amazonawscomv1.AWSIAMRole{}, f.defaultInformer)
+	return f.factory.InformerFor(&zalandoorgv1.AWSIAMRole{}, f.defaultInformer)
 }
 
 func (f *aWSIAMRoleInformer) Lister() v1.AWSIAMRoleLister {

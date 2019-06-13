@@ -19,7 +19,7 @@ limitations under the License.
 package versioned
 
 import (
-	amazonawsv1 "github.com/mikkeloscar/kube-aws-iam-controller/pkg/client/clientset/versioned/typed/amazonaws.com/v1"
+	zalandov1 "github.com/mikkeloscar/kube-aws-iam-controller/pkg/client/clientset/versioned/typed/zalando.org/v1"
 	discovery "k8s.io/client-go/discovery"
 	rest "k8s.io/client-go/rest"
 	flowcontrol "k8s.io/client-go/util/flowcontrol"
@@ -27,27 +27,27 @@ import (
 
 type Interface interface {
 	Discovery() discovery.DiscoveryInterface
-	AmazonawsV1() amazonawsv1.AmazonawsV1Interface
+	ZalandoV1() zalandov1.ZalandoV1Interface
 	// Deprecated: please explicitly pick a version if possible.
-	Amazonaws() amazonawsv1.AmazonawsV1Interface
+	Zalando() zalandov1.ZalandoV1Interface
 }
 
 // Clientset contains the clients for groups. Each group has exactly one
 // version included in a Clientset.
 type Clientset struct {
 	*discovery.DiscoveryClient
-	amazonawsV1 *amazonawsv1.AmazonawsV1Client
+	zalandoV1 *zalandov1.ZalandoV1Client
 }
 
-// AmazonawsV1 retrieves the AmazonawsV1Client
-func (c *Clientset) AmazonawsV1() amazonawsv1.AmazonawsV1Interface {
-	return c.amazonawsV1
+// ZalandoV1 retrieves the ZalandoV1Client
+func (c *Clientset) ZalandoV1() zalandov1.ZalandoV1Interface {
+	return c.zalandoV1
 }
 
-// Deprecated: Amazonaws retrieves the default version of AmazonawsClient.
+// Deprecated: Zalando retrieves the default version of ZalandoClient.
 // Please explicitly pick a version.
-func (c *Clientset) Amazonaws() amazonawsv1.AmazonawsV1Interface {
-	return c.amazonawsV1
+func (c *Clientset) Zalando() zalandov1.ZalandoV1Interface {
+	return c.zalandoV1
 }
 
 // Discovery retrieves the DiscoveryClient
@@ -66,7 +66,7 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 	}
 	var cs Clientset
 	var err error
-	cs.amazonawsV1, err = amazonawsv1.NewForConfig(&configShallowCopy)
+	cs.zalandoV1, err = zalandov1.NewForConfig(&configShallowCopy)
 	if err != nil {
 		return nil, err
 	}
@@ -82,7 +82,7 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 // panics if there is an error in the config.
 func NewForConfigOrDie(c *rest.Config) *Clientset {
 	var cs Clientset
-	cs.amazonawsV1 = amazonawsv1.NewForConfigOrDie(c)
+	cs.zalandoV1 = zalandov1.NewForConfigOrDie(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClientForConfigOrDie(c)
 	return &cs
@@ -91,7 +91,7 @@ func NewForConfigOrDie(c *rest.Config) *Clientset {
 // New creates a new Clientset for the given RESTClient.
 func New(c rest.Interface) *Clientset {
 	var cs Clientset
-	cs.amazonawsV1 = amazonawsv1.New(c)
+	cs.zalandoV1 = zalandov1.New(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClient(c)
 	return &cs

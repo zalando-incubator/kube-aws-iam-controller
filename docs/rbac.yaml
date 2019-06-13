@@ -10,7 +10,7 @@ metadata:
   name: kube-aws-iam-controller
 rules:
 - apiGroups:
-  - "amazonaws.com"
+  - "zalando.org"
   resources:
   - awsiamroles
   - awsiamroles/status

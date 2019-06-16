@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"time"
 
-	av1 "github.com/mikkeloscar/kube-aws-iam-controller/pkg/apis/amazonaws.com/v1"
+	av1 "github.com/mikkeloscar/kube-aws-iam-controller/pkg/apis/zalando.org/v1"
 	"github.com/mikkeloscar/kube-aws-iam-controller/pkg/clientset"
 	"github.com/mikkeloscar/kube-aws-iam-controller/pkg/recorder"
 	log "github.com/sirupsen/logrus"
@@ -120,7 +120,7 @@ func (c *AWSIAMRoleController) refresh() error {
 		return err
 	}
 
-	awsIAMRoles, err := c.client.AmazonawsV1().AWSIAMRoles(c.namespace).List(metav1.ListOptions{})
+	awsIAMRoles, err := c.client.ZalandoV1().AWSIAMRoles(c.namespace).List(metav1.ListOptions{})
 	if err != nil {
 		return err
 	}
@@ -210,7 +210,7 @@ func (c *AWSIAMRoleController) refresh() error {
 				Expiration:         &expiryTime,
 			}
 
-			_, err = c.client.AmazonawsV1().AWSIAMRoles(awsIAMRole.Namespace).UpdateStatus(&awsIAMRole)
+			_, err = c.client.ZalandoV1().AWSIAMRoles(awsIAMRole.Namespace).UpdateStatus(&awsIAMRole)
 			if err != nil {
 				log.Errorf("Failed to update status for AWSIAMRole %s/%s: %v", awsIAMRole.Namespace, awsIAMRole.Name, err)
 				continue
@@ -323,7 +323,7 @@ func (c *AWSIAMRoleController) refresh() error {
 				}
 
 				// update AWSIAMRole status
-				_, err = c.client.AmazonawsV1().AWSIAMRoles(awsIAMRole.Namespace).UpdateStatus(&awsIAMRole)
+				_, err = c.client.ZalandoV1().AWSIAMRoles(awsIAMRole.Namespace).UpdateStatus(&awsIAMRole)
 				if err != nil {
 					log.Errorf("Failed to update status of AWSIAMRole %s/%s: %v", awsIAMRole.Namespace, awsIAMRole.Name, err)
 					continue
@@ -393,7 +393,7 @@ func (c *AWSIAMRoleController) refresh() error {
 			Expiration:         &expiryTime,
 		}
 
-		_, err = c.client.AmazonawsV1().AWSIAMRoles(awsIAMRole.Namespace).UpdateStatus(&awsIAMRole)
+		_, err = c.client.ZalandoV1().AWSIAMRoles(awsIAMRole.Namespace).UpdateStatus(&awsIAMRole)
 		if err != nil {
 			log.Errorf("Failed to update status of AWSIAMRole %s/%s: %v", awsIAMRole.Namespace, awsIAMRole.Name, err)
 			continue

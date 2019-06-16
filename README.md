@@ -77,7 +77,7 @@ applications in a namespace you need to define an `AWSIAMRole` resource which
 references the IAM role you want:
 
 ```yaml
-apiVersion: amazonaws.com/v1
+apiVersion: zalando.org/v1
 kind: AWSIAMRole
 metadata:
   name: my-app-iam-role

@@ -19,22 +19,22 @@ limitations under the License.
 package fake
 
 import (
-	v1 "github.com/mikkeloscar/kube-aws-iam-controller/pkg/client/clientset/versioned/typed/amazonaws.com/v1"
+	v1 "github.com/mikkeloscar/kube-aws-iam-controller/pkg/client/clientset/versioned/typed/zalando.org/v1"
 	rest "k8s.io/client-go/rest"
 	testing "k8s.io/client-go/testing"
 )
 
-type FakeAmazonawsV1 struct {
+type FakeZalandoV1 struct {
 	*testing.Fake
 }
 
-func (c *FakeAmazonawsV1) AWSIAMRoles(namespace string) v1.AWSIAMRoleInterface {
+func (c *FakeZalandoV1) AWSIAMRoles(namespace string) v1.AWSIAMRoleInterface {
 	return &FakeAWSIAMRoles{c, namespace}
 }
 
 // RESTClient returns a RESTClient that is used to communicate
 // with API server by this client implementation.
-func (c *FakeAmazonawsV1) RESTClient() rest.Interface {
+func (c *FakeZalandoV1) RESTClient() rest.Interface {
 	var ret *rest.RESTClient
 	return ret
 }

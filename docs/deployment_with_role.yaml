@@ -41,7 +41,7 @@ spec:
         secret:
           secretName: kube-aws-iam-controller-iam-role # name of the AWSIAMRole resource
 ---
-apiVersion: amazonaws.com/v1
+apiVersion: zalando.org/v1
 kind: AWSIAMRole
 metadata:
   name: kube-aws-iam-controller-iam-role

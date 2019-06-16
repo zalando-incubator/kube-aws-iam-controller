@@ -21,7 +21,7 @@ package v1
 import (
 	"time"
 
-	v1 "github.com/mikkeloscar/kube-aws-iam-controller/pkg/apis/amazonaws.com/v1"
+	v1 "github.com/mikkeloscar/kube-aws-iam-controller/pkg/apis/zalando.org/v1"
 	scheme "github.com/mikkeloscar/kube-aws-iam-controller/pkg/client/clientset/versioned/scheme"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
@@ -56,7 +56,7 @@ type aWSIAMRoles struct {
 }
 
 // newAWSIAMRoles returns a AWSIAMRoles
-func newAWSIAMRoles(c *AmazonawsV1Client, namespace string) *aWSIAMRoles {
+func newAWSIAMRoles(c *ZalandoV1Client, namespace string) *aWSIAMRoles {
 	return &aWSIAMRoles{
 		client: c.RESTClient(),
 		ns:     namespace,

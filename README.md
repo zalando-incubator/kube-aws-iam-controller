@@ -6,12 +6,13 @@ This is a Kubernetes controller for distributing AWS IAM role credentials to
 pods via secrets.
 
 It aims to solve the same problem as other existing tools like
-[jtblin/kube2iam](https://github.com/jtblin/kube2iam), namely distribute
-different AWS IAM roles to different pods within the same cluster.  However, it
-solves the problem in a different way to work around an inherit problem with
-the architecture or kube2iam and similar solutions.
+[jtblin/kube2iam](https://github.com/jtblin/kube2iam) and
+[uswitch/kiam](https://github.com/uswitch/kiam), namely distribute different
+AWS IAM roles to different pods within the same cluster.  However, it solves
+the problem in a different way to work around an inherit problem with the
+architecture or kube2iam and similar solutions.
 
-#### EC2 metadata service solution (kube2iam)
+#### EC2 metadata service solution (kube2iam, kiam)
 
 Kube2iam works by running an EC2 metadata service proxy on each node in order
 to intercept role requests made by pods using one of the AWS SDKs. Instead of

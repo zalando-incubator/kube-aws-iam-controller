@@ -21,7 +21,7 @@ package externalversions
 import (
 	"fmt"
 
-	v1 "github.com/mikkeloscar/kube-aws-iam-controller/pkg/apis/zalando.org/v1"
+	v1 "github.com/zalando-incubator/kube-aws-iam-controller/pkg/apis/zalando.org/v1"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	cache "k8s.io/client-go/tools/cache"
 )

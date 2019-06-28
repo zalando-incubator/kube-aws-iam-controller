@@ -19,7 +19,7 @@ set -o nounset
 set -o pipefail
 
 SRC="github.com"
-GOPKG="$SRC/mikkeloscar/kube-aws-iam-controller"
+GOPKG="$SRC/zalando-incubator/kube-aws-iam-controller"
 CUSTOM_RESOURCE_NAME="zalando.org"
 CUSTOM_RESOURCE_VERSION="v1"
 

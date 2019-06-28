@@ -7,10 +7,10 @@ import (
 	"strconv"
 	"time"
 
-	av1 "github.com/mikkeloscar/kube-aws-iam-controller/pkg/apis/zalando.org/v1"
-	"github.com/mikkeloscar/kube-aws-iam-controller/pkg/clientset"
-	"github.com/mikkeloscar/kube-aws-iam-controller/pkg/recorder"
 	log "github.com/sirupsen/logrus"
+	av1 "github.com/zalando-incubator/kube-aws-iam-controller/pkg/apis/zalando.org/v1"
+	"github.com/zalando-incubator/kube-aws-iam-controller/pkg/clientset"
+	"github.com/zalando-incubator/kube-aws-iam-controller/pkg/recorder"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"

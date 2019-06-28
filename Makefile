@@ -2,7 +2,7 @@
 
 BINARY        ?= kube-aws-iam-controller
 VERSION       ?= $(shell git describe --tags --always --dirty)
-IMAGE         ?= mikkeloscar/$(BINARY)
+IMAGE         ?= registry-write.opensource.zalan.do/teapot/$(BINARY)
 TAG           ?= $(VERSION)
 SOURCES       = $(shell find . -name '*.go')
 GENERATED     = pkg/client pkg/apis/zalando.org/v1/zz_generated.deepcopy.go

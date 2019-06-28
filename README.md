@@ -1,6 +1,6 @@
 # AWS IAM Controller for Kubernetes
-[![Build Status](https://travis-ci.org/mikkeloscar/kube-aws-iam-controller.svg?branch=master)](https://travis-ci.org/mikkeloscar/kube-aws-iam-controller)
-[![Coverage Status](https://coveralls.io/repos/github/mikkeloscar/kube-aws-iam-controller/badge.svg?branch=master)](https://coveralls.io/github/mikkeloscar/kube-aws-iam-controller?branch=master)
+[![Build Status](https://travis-ci.org/zalando-incubator/kube-aws-iam-controller.svg?branch=master)](https://travis-ci.org/zalando-incubator/kube-aws-iam-controller)
+[![Coverage Status](https://coveralls.io/repos/github/zalando-incubator/kube-aws-iam-controller/badge.svg?branch=master)](https://coveralls.io/github/zalando-incubator/kube-aws-iam-controller?branch=master)
 
 This is a Kubernetes controller for distributing AWS IAM role credentials to
 pods via secrets.

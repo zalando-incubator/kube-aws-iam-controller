@@ -19,9 +19,9 @@ limitations under the License.
 package fake
 
 import (
-	clientset "github.com/mikkeloscar/kube-aws-iam-controller/pkg/client/clientset/versioned"
-	zalandov1 "github.com/mikkeloscar/kube-aws-iam-controller/pkg/client/clientset/versioned/typed/zalando.org/v1"
-	fakezalandov1 "github.com/mikkeloscar/kube-aws-iam-controller/pkg/client/clientset/versioned/typed/zalando.org/v1/fake"
+	clientset "github.com/zalando-incubator/kube-aws-iam-controller/pkg/client/clientset/versioned"
+	zalandov1 "github.com/zalando-incubator/kube-aws-iam-controller/pkg/client/clientset/versioned/typed/zalando.org/v1"
+	fakezalandov1 "github.com/zalando-incubator/kube-aws-iam-controller/pkg/client/clientset/versioned/typed/zalando.org/v1/fake"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/discovery"

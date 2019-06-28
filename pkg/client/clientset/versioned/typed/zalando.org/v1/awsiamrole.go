@@ -21,8 +21,8 @@ package v1
 import (
 	"time"
 
-	v1 "github.com/mikkeloscar/kube-aws-iam-controller/pkg/apis/zalando.org/v1"
-	scheme "github.com/mikkeloscar/kube-aws-iam-controller/pkg/client/clientset/versioned/scheme"
+	v1 "github.com/zalando-incubator/kube-aws-iam-controller/pkg/apis/zalando.org/v1"
+	scheme "github.com/zalando-incubator/kube-aws-iam-controller/pkg/client/clientset/versioned/scheme"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"

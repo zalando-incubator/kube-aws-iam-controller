@@ -4,10 +4,10 @@ import (
 	"testing"
 	"time"
 
-	av1 "github.com/mikkeloscar/kube-aws-iam-controller/pkg/apis/zalando.org/v1"
-	fakeAWS "github.com/mikkeloscar/kube-aws-iam-controller/pkg/client/clientset/versioned/fake"
-	"github.com/mikkeloscar/kube-aws-iam-controller/pkg/clientset"
 	"github.com/stretchr/testify/require"
+	av1 "github.com/zalando-incubator/kube-aws-iam-controller/pkg/apis/zalando.org/v1"
+	fakeAWS "github.com/zalando-incubator/kube-aws-iam-controller/pkg/client/clientset/versioned/fake"
+	"github.com/zalando-incubator/kube-aws-iam-controller/pkg/clientset"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"

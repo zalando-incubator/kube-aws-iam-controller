@@ -19,8 +19,8 @@ limitations under the License.
 package zalando
 
 import (
-	internalinterfaces "github.com/mikkeloscar/kube-aws-iam-controller/pkg/client/informers/externalversions/internalinterfaces"
-	v1 "github.com/mikkeloscar/kube-aws-iam-controller/pkg/client/informers/externalversions/zalando.org/v1"
+	internalinterfaces "github.com/zalando-incubator/kube-aws-iam-controller/pkg/client/informers/externalversions/internalinterfaces"
+	v1 "github.com/zalando-incubator/kube-aws-iam-controller/pkg/client/informers/externalversions/zalando.org/v1"
 )
 
 // Interface provides access to each of this group's versions.

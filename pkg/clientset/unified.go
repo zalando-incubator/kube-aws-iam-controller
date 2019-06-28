@@ -6,8 +6,8 @@ import (
 	"net/url"
 	"time"
 
-	awsiamrole "github.com/mikkeloscar/kube-aws-iam-controller/pkg/client/clientset/versioned"
-	zalandov1 "github.com/mikkeloscar/kube-aws-iam-controller/pkg/client/clientset/versioned/typed/zalando.org/v1"
+	awsiamrole "github.com/zalando-incubator/kube-aws-iam-controller/pkg/client/clientset/versioned"
+	zalandov1 "github.com/zalando-incubator/kube-aws-iam-controller/pkg/client/clientset/versioned/typed/zalando.org/v1"
 	discovery "k8s.io/client-go/discovery"
 	"k8s.io/client-go/kubernetes"
 	admissionregistrationv1alpha1 "k8s.io/client-go/kubernetes/typed/admissionregistration/v1alpha1"

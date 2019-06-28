@@ -12,8 +12,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials/stscreds"
 	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/mikkeloscar/kube-aws-iam-controller/pkg/clientset"
 	log "github.com/sirupsen/logrus"
+	"github.com/zalando-incubator/kube-aws-iam-controller/pkg/clientset"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	v1 "k8s.io/api/core/v1"
 )

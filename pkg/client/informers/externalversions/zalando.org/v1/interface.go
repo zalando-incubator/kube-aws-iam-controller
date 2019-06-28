@@ -19,7 +19,7 @@ limitations under the License.
 package v1
 
 import (
-	internalinterfaces "github.com/mikkeloscar/kube-aws-iam-controller/pkg/client/informers/externalversions/internalinterfaces"
+	internalinterfaces "github.com/zalando-incubator/kube-aws-iam-controller/pkg/client/informers/externalversions/internalinterfaces"
 )
 
 // Interface provides access to all the informers in this group version.

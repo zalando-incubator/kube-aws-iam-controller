@@ -19,7 +19,7 @@ limitations under the License.
 package versioned
 
 import (
-	zalandov1 "github.com/mikkeloscar/kube-aws-iam-controller/pkg/client/clientset/versioned/typed/zalando.org/v1"
+	zalandov1 "github.com/zalando-incubator/kube-aws-iam-controller/pkg/client/clientset/versioned/typed/zalando.org/v1"
 	discovery "k8s.io/client-go/discovery"
 	rest "k8s.io/client-go/rest"
 	flowcontrol "k8s.io/client-go/util/flowcontrol"

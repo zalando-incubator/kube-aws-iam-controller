@@ -20,7 +20,7 @@ spec:
       serviceAccount: kube-aws-iam-controller
       containers:
       - name: kube-aws-iam-controller
-        image: mikkeloscar/kube-aws-iam-controller:latest
+        image: registry.opensource.zalan.do/teapot/kube-aws-iam-controller:latest
         env:
         # must be set for the AWS SDK/AWS CLI to find the credentials file.
         - name: AWS_SHARED_CREDENTIALS_FILE

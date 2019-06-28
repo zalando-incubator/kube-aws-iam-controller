@@ -1,7 +1,7 @@
 package v1
 
 import (
-	zalando "github.com/mikkeloscar/kube-aws-iam-controller/pkg/apis/zalando.org"
+	zalando "github.com/zalando-incubator/kube-aws-iam-controller/pkg/apis/zalando.org"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"

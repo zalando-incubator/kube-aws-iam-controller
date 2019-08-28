@@ -1,7 +1,7 @@
 # Configure credentials for SDKs
 
 The AWS SDKs does not have complete feature parity and therefore must be
-configured slightly different to recieve credentials in Kubernetes.
+configured slightly different to receive credentials in Kubernetes.
 
 Below is a support matrix for the different SDKs along with a configuration
 guide for those that have support already.

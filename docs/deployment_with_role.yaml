@@ -17,7 +17,7 @@ spec:
         application: kube-aws-iam-controller
         version: latest
     spec:
-      serviceAccount: kube-aws-iam-controller
+      serviceAccountName: kube-aws-iam-controller
       containers:
       - name: kube-aws-iam-controller
         image: registry.opensource.zalan.do/teapot/kube-aws-iam-controller:latest

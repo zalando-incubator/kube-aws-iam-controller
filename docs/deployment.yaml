@@ -17,7 +17,7 @@ spec:
         application: kube-aws-iam-controller
         version: latest
     spec:
-      serviceAccount: kube-aws-iam-controller
+      serviceAccountName: kube-aws-iam-controller
       # running with hostNetwork to bypass metadata service block from pod
       # network.
       hostNetwork: true

@@ -27,7 +27,7 @@ func (sts *mockSTSAPI) AssumeRole(*sts.AssumeRoleInput) (*sts.AssumeRoleOutput, 
 
 func TestGet(t *testing.T) {
 	sess := session.New(&aws.Config{Region: aws.String("region")})
-	getter := NewSTSCredentialsGetter(sess, "")
+	getter := NewSTSCredentialsGetter(sess, "", "")
 	getter.svc = &mockSTSAPI{
 		err: nil,
 		assumeRoleResp: &sts.AssumeRoleOutput{
@@ -51,7 +51,8 @@ func TestGet(t *testing.T) {
 	getter.svc = &mockSTSAPI{
 		err: errors.New("failed"),
 	}
-	_, err = getter.Get(arnPrefix+"role", 3600*time.Second)
+	roleARNPrefix, err := GetPrefixFromARN(roleARN)
+	_, err = getter.Get(roleARNPrefix+"role", 3600*time.Second)
 	require.Error(t, err)
 }
 
@@ -59,6 +60,36 @@ func TestGet(t *testing.T) {
 // 	sess := &session.Session{}
 // 	baseRole, err := GetBaseRoleARN(sess)
 // }
+
+func TestGetPrefixFromARN(tt *testing.T) {
+	for _, tc := range []struct {
+		msg            string
+		roleARN        string
+		expectedPrefix string
+	}{
+		{
+			msg:            "commercial AWS partition",
+			roleARN:        "arn:aws:iam::012345678910:role/com-cloud",
+			expectedPrefix: "arn:aws:iam::",
+		},
+		{
+			msg:            "us gov AWS partition",
+			roleARN:        "arn:aws-us-gov:iam::012345678910:role/gov-cloud",
+			expectedPrefix: "arn:aws-us-gov:iam::",
+		},
+		{
+			msg:            "china AWS partition",
+			roleARN:        "arn:aws-cn:iam::012345678910:role/cn-cloud",
+			expectedPrefix: "arn:aws-cn:iam::",
+		},
+	} {
+		tt.Run(tc.msg, func(t *testing.T) {
+			normalized, err := GetPrefixFromARN(tc.roleARN)
+			require.NoError(t, err)
+			require.Equal(t, tc.expectedPrefix, normalized)
+		})
+	}
+}
 
 func TestNormalizeRoleARN(tt *testing.T) {
 	for _, tc := range []struct {
@@ -82,13 +113,24 @@ func TestNormalizeRoleARN(tt *testing.T) {
 			expectedARN: "012345678910.path-name.role-name",
 		},
 		{
+			msg:         "us gov partition role name with path",
+			roleARN:     "arn:aws-us-gov:iam::012345678910:role/path-name/role-name",
+			expectedARN: "012345678910.path-name.role-name",
+		},
+		{
+			msg:         "china partition role name with path",
+			roleARN:     "arn:aws-cn:iam::012345678910:role/path-name/role-name",
+			expectedARN: "012345678910.path-name.role-name",
+		},
+		{
 			msg:         "truncate path for long role names",
 			roleARN:     "arn:aws:iam::012345678910:role/aaaaa/bbbbb/ccccccccccccccccccccccccccccccccccccc-role-name",
 			expectedARN: "012345678910.a.b.ccccccccccccccccccccccccccccccccccccc-role-name",
 		},
 	} {
 		tt.Run(tc.msg, func(t *testing.T) {
-			normalized, err := normalizeRoleARN(tc.roleARN)
+			roleARNPrefix, err := GetPrefixFromARN(tc.roleARN)
+			normalized, err := normalizeRoleARN(tc.roleARN, roleARNPrefix)
 			require.NoError(t, err)
 			require.Equal(t, tc.expectedARN, normalized)
 		})

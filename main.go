@@ -84,9 +84,15 @@ func main() {
 		log.Infof("Autodiscovered Base Role ARN: %s", config.BaseRoleARN)
 	}
 
+	baseRoleARNPrefix, err := GetPrefixFromARN(config.BaseRoleARN)
+	if err != nil {
+		log.Fatalf("Failed to parse ARN prefix from Base Role ARN: %v", err)
+	}
+	log.Debugf("Parsed Base Role ARN prefix: %s", baseRoleARNPrefix)
+
 	awsConfigs := make([]*aws.Config, 0, 1)
 	if config.AssumeRole != "" {
-		if !strings.HasPrefix(config.AssumeRole, arnPrefix) {
+		if !strings.HasPrefix(config.AssumeRole, baseRoleARNPrefix) {
 			config.AssumeRole = config.BaseRoleARN + config.AssumeRole
 		}
 		log.Infof("Using custom Assume Role: %s", config.AssumeRole)
@@ -94,7 +100,7 @@ func main() {
 		awsConfigs = append(awsConfigs, &aws.Config{Credentials: creds})
 	}
 
-	credsGetter := NewSTSCredentialsGetter(awsSess, config.BaseRoleARN, awsConfigs...)
+	credsGetter := NewSTSCredentialsGetter(awsSess, config.BaseRoleARN, baseRoleARNPrefix, awsConfigs...)
 
 	podsEventCh := make(chan *PodEvent, config.EventQueueSize)
 

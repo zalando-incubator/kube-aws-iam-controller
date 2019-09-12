@@ -8,9 +8,9 @@ guide for those that have support already.
 
 | SDK | Supported | Version | Comment |
 | --- | --------- | ------- | ------- |
-| [Java AWS SDK (JVM)](#java-aws-sdk-jvm) | :heavy_check_mark: | `>=1.11.394` | |
+| [Java AWS SDK (JVM)](#java-aws-sdk-jvm) | :heavy_check_mark: | `>=1.11.394`, `>=2.7.8` | Configuration differs slightly between v1 and v2 of the SDK |
 | [Python AWS SDK (boto3)](#python-aws-sdk-boto3) | :heavy_check_mark: | `>=1.9.28` | |
-| [AWS CLI](#aws-cli) | :heavy_check_mark: | `>=1.16.43`, `>=2.7.8` | Configuration differs slightly between v1 and v2 of the SDK |
+| [AWS CLI](#aws-cli) | :heavy_check_mark: | `>=1.16.43` | |
 | [Ruby AWS SDK](#) | :heavy_plus_sign: | | Supported but not yet tested ([aws-sdk-ruby/#1820](https://github.com/aws/aws-sdk-ruby/pull/1820)) |
 | [Golang AWS SDK](#golang-aws-sdk) | :heavy_check_mark: | `>=v1.16.2` | |
 | [JS AWS SDK](#) | :heavy_multiplication_x: | | Not yet supported ([aws-sdk-js/#1923](https://github.com/aws/aws-sdk-js/pull/1923)) |
@@ -23,7 +23,7 @@ guide for those that have support already.
 | [aws-sdk-java-v2](https://github.com/aws/aws-sdk-java-v2) | `>=2.7.8` |
 
 Here's a minimal example of how to configure a deployment so each pod will get
-the AWS credentials. 
+the AWS credentials.
 
 ```yaml
 apiVersion: apps/v1

@@ -8,7 +8,7 @@ guide for those that have support already.
 
 | SDK | Supported | Version | Comment |
 | --- | --------- | ------- | ------- |
-| [Java AWS SDK (JVM)](#java-aws-sdk-jvm) | :heavy_check_mark: | `>=1.11.394` | |
+| [Java AWS SDK (JVM)](#java-aws-sdk-jvm) | :heavy_check_mark: | `>=1.11.394`, `>=2.7.8` | Configuration differs slightly between v1 and v2 of the SDK |
 | [Python AWS SDK (boto3)](#python-aws-sdk-boto3) | :heavy_check_mark: | `>=1.9.28` | |
 | [AWS CLI](#aws-cli) | :heavy_check_mark: | `>=1.16.43` | |
 | [Ruby AWS SDK](#) | :heavy_plus_sign: | | Supported but not yet tested ([aws-sdk-ruby/#1820](https://github.com/aws/aws-sdk-ruby/pull/1820)) |
@@ -20,6 +20,7 @@ guide for those that have support already.
 | SDK | Tested version |
 |-----| -------------- |
 | [aws-sdk-java](https://github.com/aws/aws-sdk-java) | `>=1.11.394` |
+| [aws-sdk-java-v2](https://github.com/aws/aws-sdk-java-v2) | `>=2.7.8` |
 
 Here's a minimal example of how to configure a deployment so each pod will get
 the AWS credentials.
@@ -43,8 +44,11 @@ spec:
       - name: aws-iam-java-example
         image: mikkeloscar/kube-aws-iam-controller-java-example:latest
         env:
-        # must be set for the Java AWS SDK/AWS CLI to find the credentials file.
+        # must be set for the Java AWS SDK/AWS CLI to find the credentials file if you use the AWS SDK for Java v1
         - name: AWS_CREDENTIAL_PROFILES_FILE
+          value: /meta/aws-iam/credentials
+        # must be set for the Java AWS SDK/AWS CLI to find the credentials file if you use the AWS SDK for Java v2
+        - name: AWS_SHARED_CREDENTIALS_FILE
           value: /meta/aws-iam/credentials
         volumeMounts:
         - name: aws-iam-credentials
@@ -63,10 +67,8 @@ spec:
   roleReference: aws-iam-example
 ```
 
-It's important that you set the `AWS_CREDENTIALS_PROFILES_FILE` environment
-variable as shown in the example as well as mounting the secret named after the
-`AWSIAMRole` resource into the pod under `/meta/aws-iam`. This secret will be
-provisioned by the **kube-aws-iam-controller**.
+It's important that you set the `AWS_CREDENTIALS_PROFILES_FILE` or `AWS_SHARED_CREDENTIALS_FILE` depending on whether you use version 1 or version 2 of the Java AWS SDK (see the [AWS SDK for Java migration guide](https://docs.aws.amazon.com/sdk-for-java/v2/migration-guide/client-credential.html) for more info).
+You also need to mount the secret named after the `AWSIAMRole` resource into the pod under `/meta/aws-iam`. This secret will be provisioned by the **kube-aws-iam-controller**.
 
 See full [Java example project](https://github.com/mikkeloscar/kube-aws-iam-controller-java-example).
 

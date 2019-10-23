@@ -337,7 +337,7 @@ func (c *AWSIAMRoleController) refresh() error {
 			c.recorder.Event(&awsIAMRole,
 				v1.EventTypeWarning,
 				"GetCredentialsFailed",
-				fmt.Sprintf("Failed to get creedentials for role '%s': %v", role, err),
+				fmt.Sprintf("Failed to get credentials for role '%s': %v", role, err),
 			)
 			continue
 		}

@@ -56,7 +56,7 @@ func (in *AWSIAMRole) DeepCopyObject() runtime.Object {
 func (in *AWSIAMRoleList) DeepCopyInto(out *AWSIAMRoleList) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
-	out.ListMeta = in.ListMeta
+	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
 		*out = make([]AWSIAMRole, len(*in))

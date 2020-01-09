@@ -52,6 +52,7 @@ func TestGet(t *testing.T) {
 		err: errors.New("failed"),
 	}
 	roleARNPrefix, err := GetPrefixFromARN(roleARN)
+	require.NoError(t, err)
 	_, err = getter.Get(roleARNPrefix+"role", 3600*time.Second)
 	require.Error(t, err)
 }
@@ -130,6 +131,7 @@ func TestNormalizeRoleARN(tt *testing.T) {
 	} {
 		tt.Run(tc.msg, func(t *testing.T) {
 			roleARNPrefix, err := GetPrefixFromARN(tc.roleARN)
+			require.NoError(t, err)
 			normalized, err := normalizeRoleARN(tc.roleARN, roleARNPrefix)
 			require.NoError(t, err)
 			require.Equal(t, tc.expectedARN, normalized)

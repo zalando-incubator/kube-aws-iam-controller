@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/ec2metadata"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sts"
@@ -13,7 +14,6 @@ import (
 )
 
 const (
-	arnPrefix              = "arn:aws:iam::"
 	roleARNSuffix          = ":role"
 	roleSessionNameMaxSize = 64
 )
@@ -23,7 +23,7 @@ type CredentialsGetter interface {
 	Get(role string, sessionDuration time.Duration) (*Credentials, error)
 }
 
-// Credentials defines fecthed credentials including expiration time.
+// Credentials defines fetched credentials including expiration time.
 type Credentials struct {
 	RoleARN         string
 	AccessKeyID     string
@@ -35,15 +35,17 @@ type Credentials struct {
 // STSCredentialsGetter is a credentials getter for getting credentials from
 // STS.
 type STSCredentialsGetter struct {
-	svc         stsiface.STSAPI
-	baseRoleARN string
+	svc               stsiface.STSAPI
+	baseRoleARN       string
+	baseRoleARNPrefix string
 }
 
 // NewSTSCredentialsGetter initializes a new STS based credentials fetcher.
-func NewSTSCredentialsGetter(sess *session.Session, baseRoleARN string, configs ...*aws.Config) *STSCredentialsGetter {
+func NewSTSCredentialsGetter(sess *session.Session, baseRoleARN, baseRoleARNPrefix string, configs ...*aws.Config) *STSCredentialsGetter {
 	return &STSCredentialsGetter{
-		svc:         sts.New(sess, configs...),
-		baseRoleARN: baseRoleARN,
+		svc:               sts.New(sess, configs...),
+		baseRoleARN:       baseRoleARN,
+		baseRoleARNPrefix: baseRoleARNPrefix,
 	}
 }
 
@@ -51,11 +53,11 @@ func NewSTSCredentialsGetter(sess *session.Session, baseRoleARN string, configs 
 // via STS.
 func (c *STSCredentialsGetter) Get(role string, sessionDuration time.Duration) (*Credentials, error) {
 	roleARN := c.baseRoleARN + role
-	if strings.HasPrefix(role, arnPrefix) {
+	if strings.HasPrefix(role, c.baseRoleARNPrefix) {
 		roleARN = role
 	}
 
-	roleSessionName, err := normalizeRoleARN(roleARN)
+	roleSessionName, err := normalizeRoleARN(roleARN, c.baseRoleARNPrefix)
 	if err != nil {
 		return nil, err
 	}
@@ -101,7 +103,7 @@ func GetBaseRoleARN(sess *session.Session) (string, error) {
 // normalizeRoleARN normalizes a role ARN by substituting special characters
 // with characters allowed for a RoleSessionName according to:
 // https://docs.aws.amazon.com/STS/latest/APIReference/API_AssumeRole.html
-func normalizeRoleARN(roleARN string) (string, error) {
+func normalizeRoleARN(roleARN, roleARNPrefix string) (string, error) {
 	parts := strings.Split(roleARN, "/")
 	if len(parts) < 2 {
 		return "", fmt.Errorf("invalid roleARN: %s", roleARN)
@@ -109,7 +111,7 @@ func normalizeRoleARN(roleARN string) (string, error) {
 
 	remainingChars := roleSessionNameMaxSize
 
-	accountID := strings.TrimPrefix(parts[0], arnPrefix)
+	accountID := strings.TrimPrefix(parts[0], roleARNPrefix)
 	accountID = strings.TrimSuffix(accountID, roleARNSuffix)
 
 	remainingChars -= len(accountID)
@@ -136,4 +138,15 @@ func normalizePath(levels []string, remaining int) string {
 		last = last[:maxName]
 	}
 	return normalizePath(levels[:len(levels)-1], remaining-len(last)-1) + "." + last
+}
+
+// GetPrefixFromARN returns the prefix from an AWS ARN as a string.
+// e.g. given the role: "arn:aws:iam::012345678910:role/role-name" it would
+// return the string: "arn:aws:iam::"
+func GetPrefixFromARN(inputARN string) (string, error) {
+	arn, err := arn.Parse(inputARN)
+	if err != nil {
+		return "", fmt.Errorf("error parsing ARN (%s): %s", inputARN, err)
+	}
+	return fmt.Sprintf("arn:%s:iam::", arn.Partition), nil
 }

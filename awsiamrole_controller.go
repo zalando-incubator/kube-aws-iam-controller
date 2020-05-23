@@ -93,7 +93,7 @@ func (c *AWSIAMRoleController) getCreds(role string, sessionDuration time.Durati
 // roles.
 func (c *AWSIAMRoleController) Run(ctx context.Context) {
 	for {
-		err := c.refresh()
+		err := c.refresh(ctx)
 		if err != nil {
 			log.Error(err)
 		}
@@ -110,17 +110,17 @@ func (c *AWSIAMRoleController) Run(ctx context.Context) {
 // refresh checks for soon to expire secrets and requests new credentials. It
 // also looks for AWSIAMRole resources where secrets are missing and creates
 // the secrets for the designated namespace.
-func (c *AWSIAMRoleController) refresh() error {
+func (c *AWSIAMRoleController) refresh(ctx context.Context) error {
 	opts := metav1.ListOptions{
 		LabelSelector: labels.Set(awsIAMRoleOwnerLabels).AsSelector().String(),
 	}
 
-	secrets, err := c.client.CoreV1().Secrets(c.namespace).List(opts)
+	secrets, err := c.client.CoreV1().Secrets(c.namespace).List(ctx, opts)
 	if err != nil {
 		return err
 	}
 
-	awsIAMRoles, err := c.client.ZalandoV1().AWSIAMRoles(c.namespace).List(metav1.ListOptions{})
+	awsIAMRoles, err := c.client.ZalandoV1().AWSIAMRoles(c.namespace).List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return err
 	}
@@ -182,7 +182,7 @@ func (c *AWSIAMRoleController) refresh() error {
 			secret.Data[awsIAMRoleGenerationKey] = []byte(fmt.Sprintf("%d", awsIAMRole.Generation))
 
 			// update secret with refreshed credentials
-			_, err := c.client.CoreV1().Secrets(secret.Namespace).Update(&secret)
+			_, err := c.client.CoreV1().Secrets(secret.Namespace).Update(ctx, &secret, metav1.UpdateOptions{})
 			if err != nil {
 				log.Errorf("Failed to update secret %s/%s: %v", secret.Namespace, secret.Name, err)
 				continue
@@ -210,7 +210,7 @@ func (c *AWSIAMRoleController) refresh() error {
 				Expiration:         &expiryTime,
 			}
 
-			_, err = c.client.ZalandoV1().AWSIAMRoles(awsIAMRole.Namespace).UpdateStatus(&awsIAMRole)
+			_, err = c.client.ZalandoV1().AWSIAMRoles(awsIAMRole.Namespace).UpdateStatus(ctx, &awsIAMRole, metav1.UpdateOptions{})
 			if err != nil {
 				log.Errorf("Failed to update status for AWSIAMRole %s/%s: %v", awsIAMRole.Namespace, awsIAMRole.Name, err)
 				continue
@@ -220,7 +220,7 @@ func (c *AWSIAMRoleController) refresh() error {
 
 	// clean up orphaned secrets
 	for _, secret := range orphanSecrets {
-		err := c.client.CoreV1().Secrets(secret.Namespace).Delete(secret.Name, nil)
+		err := c.client.CoreV1().Secrets(secret.Namespace).Delete(ctx, secret.Name, metav1.DeleteOptions{})
 		if err != nil {
 			log.Errorf("Failed to delete secret %s/%s: %v", secret.Namespace, secret.Name, err)
 			continue
@@ -275,7 +275,7 @@ func (c *AWSIAMRoleController) refresh() error {
 				secret.Data[awsIAMRoleGenerationKey] = []byte(fmt.Sprintf("%d", awsIAMRole.Generation))
 
 				// update secret with refreshed credentials
-				_, err := c.client.CoreV1().Secrets(secret.Namespace).Update(&secret)
+				_, err := c.client.CoreV1().Secrets(secret.Namespace).Update(ctx, &secret, metav1.UpdateOptions{})
 				if err != nil {
 					c.recorder.Event(&awsIAMRole,
 						v1.EventTypeWarning,
@@ -323,7 +323,7 @@ func (c *AWSIAMRoleController) refresh() error {
 				}
 
 				// update AWSIAMRole status
-				_, err = c.client.ZalandoV1().AWSIAMRoles(awsIAMRole.Namespace).UpdateStatus(&awsIAMRole)
+				_, err = c.client.ZalandoV1().AWSIAMRoles(awsIAMRole.Namespace).UpdateStatus(ctx, &awsIAMRole, metav1.UpdateOptions{})
 				if err != nil {
 					log.Errorf("Failed to update status of AWSIAMRole %s/%s: %v", awsIAMRole.Namespace, awsIAMRole.Name, err)
 					continue
@@ -362,7 +362,7 @@ func (c *AWSIAMRoleController) refresh() error {
 			Data: secretData,
 		}
 
-		_, err = c.client.CoreV1().Secrets(awsIAMRole.Namespace).Create(secret)
+		_, err = c.client.CoreV1().Secrets(awsIAMRole.Namespace).Create(ctx, secret, metav1.CreateOptions{})
 		if err != nil {
 			c.recorder.Event(&awsIAMRole,
 				v1.EventTypeWarning,
@@ -393,7 +393,7 @@ func (c *AWSIAMRoleController) refresh() error {
 			Expiration:         &expiryTime,
 		}
 
-		_, err = c.client.ZalandoV1().AWSIAMRoles(awsIAMRole.Namespace).UpdateStatus(&awsIAMRole)
+		_, err = c.client.ZalandoV1().AWSIAMRoles(awsIAMRole.Namespace).UpdateStatus(ctx, &awsIAMRole, metav1.UpdateOptions{})
 		if err != nil {
 			log.Errorf("Failed to update status of AWSIAMRole %s/%s: %v", awsIAMRole.Namespace, awsIAMRole.Name, err)
 			continue

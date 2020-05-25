@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -152,20 +153,20 @@ func TestRefreshAWSIAMRole(tt *testing.T) {
 			client := clientset.NewClientset(kubeClient, awsKubeClient)
 
 			for _, role := range tc.awsIAMRoles {
-				_, err := client.ZalandoV1().AWSIAMRoles("default").Create(&role)
+				_, err := client.ZalandoV1().AWSIAMRoles("default").Create(context.TODO(), &role, metav1.CreateOptions{})
 				require.NoError(t, err)
 			}
 
 			for _, secret := range tc.secrets {
-				_, err := client.CoreV1().Secrets("default").Create(&secret)
+				_, err := client.CoreV1().Secrets("default").Create(context.TODO(), &secret, metav1.CreateOptions{})
 				require.NoError(t, err)
 			}
 
 			controller := NewAWSIAMRoleController(client, 0, 15*time.Minute, tc.credsGetter, "default")
-			err := controller.refresh()
+			err := controller.refresh(context.TODO())
 			require.NoError(t, err)
 
-			secrets, err := client.CoreV1().Secrets("default").List(metav1.ListOptions{})
+			secrets, err := client.CoreV1().Secrets("default").List(context.TODO(), metav1.ListOptions{})
 			require.NoError(t, err)
 			require.Len(t, secrets.Items, len(tc.expectedSecrets))
 		})

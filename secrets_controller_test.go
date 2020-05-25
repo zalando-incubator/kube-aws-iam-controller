@@ -1,11 +1,12 @@
 package main
 
 import (
+	"context"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
 )
@@ -167,7 +168,7 @@ func TestRefresh(tt *testing.T) {
 
 			// setup secrets
 			for _, secret := range ti.secrets {
-				_, err := controller.client.CoreV1().Secrets("default").Create(&secret)
+				_, err := controller.client.CoreV1().Secrets("default").Create(context.TODO(), &secret, metav1.CreateOptions{})
 				require.NoError(t, err)
 			}
 
@@ -176,10 +177,10 @@ func TestRefresh(tt *testing.T) {
 				controller.roleStore.Add(role.Role, role.Namespace, role.Pod)
 			}
 
-			err := controller.refresh()
+			err := controller.refresh(context.TODO())
 			require.NoError(t, err)
 
-			secrets, err := controller.client.CoreV1().Secrets("default").List(metav1.ListOptions{})
+			secrets, err := controller.client.CoreV1().Secrets("default").List(context.TODO(), metav1.ListOptions{})
 			require.NoError(t, err)
 			require.Len(t, secrets.Items, ti.expectedSecrets)
 		})

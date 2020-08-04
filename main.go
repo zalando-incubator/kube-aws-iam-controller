@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"net/url"
 	"os"
 	"os/signal"
@@ -11,6 +12,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials/stscreds"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/aws/session"
 	log "github.com/sirupsen/logrus"
 	"github.com/zalando-incubator/kube-aws-iam-controller/pkg/clientset"
@@ -27,17 +29,28 @@ const (
 
 var (
 	config struct {
-		Debug          bool
-		Interval       time.Duration
-		RefreshLimit   time.Duration
-		EventQueueSize int
-		BaseRoleARN    string
-		APIServer      *url.URL
-		Namespace      string
-		AssumeRole     string
+		Debug               bool
+		Interval            time.Duration
+		RefreshLimit        time.Duration
+		EventQueueSize      int
+		BaseRoleARN         string
+		APIServer           *url.URL
+		Namespace           string
+		AssumeRole          string
+		UseRegionalEndpoint bool
 	}
 )
 
+type STSEndpoint struct {
+	Endpoint string
+}
+
+// NewSTSCredentialsGetter initializes a new STS based credentials fetcher.
+func NewSTSEndpoint() *STSEndpoint {
+	return &STSEndpoint{
+		Endpoint: "sts.amazonaws.com",
+	}
+}
 func main() {
 	kingpin.Flag("debug", "Enable debug logging.").BoolVar(&config.Debug)
 	kingpin.Flag("interval", "Interval between syncing secrets.").
@@ -53,6 +66,7 @@ func main() {
 	kingpin.Flag("namespace", "Limit the controller to a certain namespace.").
 		Default(v1.NamespaceAll).StringVar(&config.Namespace)
 	kingpin.Flag("apiserver", "API server url.").URLVar(&config.APIServer)
+	kingpin.Flag("use-regional-sts-endpoint", "Use the regional sts endpoint if AWS_DEFAULT_REGION is set").BoolVar(&config.UseRegionalEndpoint)
 	kingpin.Parse()
 
 	if config.Debug {
@@ -90,17 +104,21 @@ func main() {
 	}
 	log.Debugf("Parsed Base Role ARN prefix: %s", baseRoleARNPrefix)
 
-	awsConfigs := make([]*aws.Config, 0, 1)
+	awsConfigs := aws.NewConfig()
 	if config.AssumeRole != "" {
 		if !strings.HasPrefix(config.AssumeRole, baseRoleARNPrefix) {
 			config.AssumeRole = config.BaseRoleARN + config.AssumeRole
 		}
 		log.Infof("Using custom Assume Role: %s", config.AssumeRole)
 		creds := stscreds.NewCredentials(awsSess, config.AssumeRole)
-		awsConfigs = append(awsConfigs, &aws.Config{Credentials: creds})
+		awsConfigs = awsConfigs.WithCredentials(creds)
 	}
 
-	credsGetter := NewSTSCredentialsGetter(awsSess, config.BaseRoleARN, baseRoleARNPrefix, awsConfigs...)
+	if config.UseRegionalEndpoint {
+		awsConfigs = awsConfigs.WithEndpointResolver(NewSTSEndpoint())
+	}
+
+	credsGetter := NewSTSCredentialsGetter(awsSess, config.BaseRoleARN, baseRoleARNPrefix, awsConfigs)
 
 	podsEventCh := make(chan *PodEvent, config.EventQueueSize)
 
@@ -129,6 +147,44 @@ func main() {
 
 	podWatcher.Run(ctx)
 	controller.Run(ctx)
+}
+
+// GetEndpointFromRegion formas a standard sts endpoint url given a region
+func GetEndpointFromRegion(region string) string {
+	endpoint := fmt.Sprintf("https://sts.%s.amazonaws.com", region)
+	if strings.HasPrefix(region, "cn-") {
+		endpoint = fmt.Sprintf("https://sts.%s.amazonaws.com.cn", region)
+	}
+	return endpoint
+}
+
+// IsValidRegion tests for a vaild region name
+func IsValidRegion(promisedLand string) bool {
+	partitions := endpoints.DefaultResolver().(endpoints.EnumPartitions).Partitions()
+	for _, p := range partitions {
+		for region := range p.Regions() {
+			if promisedLand == region {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// EndpointFor implements the endpoints.Resolver interface for use with sts
+func (e *STSEndpoint) EndpointFor(service, region string, optFns ...func(*endpoints.Options)) (endpoints.ResolvedEndpoint, error) {
+	// only for sts service
+	if service == "sts" {
+		// only if a valid region is explicitly set
+		if IsValidRegion(region) {
+			e.Endpoint = GetEndpointFromRegion(region)
+			return endpoints.ResolvedEndpoint{
+				URL:           e.Endpoint,
+				SigningRegion: region,
+			}, nil
+		}
+	}
+	return endpoints.DefaultResolver().EndpointFor(service, region, optFns...)
 }
 
 // handleSigterm handles SIGTERM signal sent to the process.

@@ -66,7 +66,7 @@ func main() {
 	kingpin.Flag("namespace", "Limit the controller to a certain namespace.").
 		Default(v1.NamespaceAll).StringVar(&config.Namespace)
 	kingpin.Flag("apiserver", "API server url.").URLVar(&config.APIServer)
-	kingpin.Flag("use-regional-sts-endpoint", "Use the regional sts endpoint if AWS_DEFAULT_REGION is set").BoolVar(&config.UseRegionalEndpoint)
+	kingpin.Flag("use-regional-sts-endpoint", "Use the regional sts endpoint if AWS_REGION is set").BoolVar(&config.UseRegionalEndpoint)
 	kingpin.Parse()
 
 	if config.Debug {
@@ -155,6 +155,7 @@ func GetEndpointFromRegion(region string) string {
 	if strings.HasPrefix(region, "cn-") {
 		endpoint = fmt.Sprintf("https://sts.%s.amazonaws.com.cn", region)
 	}
+	log.Debugf("Using Regional STS Endpoint: %s", endpoint)
 	return endpoint
 }
 

@@ -1,5 +1,5 @@
 /*
-Copyright 2019 The Kubernetes Authors.
+Copyright 2020 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ limitations under the License.
 package v1
 
 import (
+	"context"
 	"time"
 
 	v1 "github.com/zalando-incubator/kube-aws-iam-controller/pkg/apis/zalando.org/v1"
@@ -37,15 +38,15 @@ type AWSIAMRolesGetter interface {
 
 // AWSIAMRoleInterface has methods to work with AWSIAMRole resources.
 type AWSIAMRoleInterface interface {
-	Create(*v1.AWSIAMRole) (*v1.AWSIAMRole, error)
-	Update(*v1.AWSIAMRole) (*v1.AWSIAMRole, error)
-	UpdateStatus(*v1.AWSIAMRole) (*v1.AWSIAMRole, error)
-	Delete(name string, options *metav1.DeleteOptions) error
-	DeleteCollection(options *metav1.DeleteOptions, listOptions metav1.ListOptions) error
-	Get(name string, options metav1.GetOptions) (*v1.AWSIAMRole, error)
-	List(opts metav1.ListOptions) (*v1.AWSIAMRoleList, error)
-	Watch(opts metav1.ListOptions) (watch.Interface, error)
-	Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1.AWSIAMRole, err error)
+	Create(ctx context.Context, aWSIAMRole *v1.AWSIAMRole, opts metav1.CreateOptions) (*v1.AWSIAMRole, error)
+	Update(ctx context.Context, aWSIAMRole *v1.AWSIAMRole, opts metav1.UpdateOptions) (*v1.AWSIAMRole, error)
+	UpdateStatus(ctx context.Context, aWSIAMRole *v1.AWSIAMRole, opts metav1.UpdateOptions) (*v1.AWSIAMRole, error)
+	Delete(ctx context.Context, name string, opts metav1.DeleteOptions) error
+	DeleteCollection(ctx context.Context, opts metav1.DeleteOptions, listOpts metav1.ListOptions) error
+	Get(ctx context.Context, name string, opts metav1.GetOptions) (*v1.AWSIAMRole, error)
+	List(ctx context.Context, opts metav1.ListOptions) (*v1.AWSIAMRoleList, error)
+	Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *v1.AWSIAMRole, err error)
 	AWSIAMRoleExpansion
 }
 
@@ -64,20 +65,20 @@ func newAWSIAMRoles(c *ZalandoV1Client, namespace string) *aWSIAMRoles {
 }
 
 // Get takes name of the aWSIAMRole, and returns the corresponding aWSIAMRole object, and an error if there is any.
-func (c *aWSIAMRoles) Get(name string, options metav1.GetOptions) (result *v1.AWSIAMRole, err error) {
+func (c *aWSIAMRoles) Get(ctx context.Context, name string, options metav1.GetOptions) (result *v1.AWSIAMRole, err error) {
 	result = &v1.AWSIAMRole{}
 	err = c.client.Get().
 		Namespace(c.ns).
 		Resource("awsiamroles").
 		Name(name).
 		VersionedParams(&options, scheme.ParameterCodec).
-		Do().
+		Do(ctx).
 		Into(result)
 	return
 }
 
 // List takes label and field selectors, and returns the list of AWSIAMRoles that match those selectors.
-func (c *aWSIAMRoles) List(opts metav1.ListOptions) (result *v1.AWSIAMRoleList, err error) {
+func (c *aWSIAMRoles) List(ctx context.Context, opts metav1.ListOptions) (result *v1.AWSIAMRoleList, err error) {
 	var timeout time.Duration
 	if opts.TimeoutSeconds != nil {
 		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
@@ -88,13 +89,13 @@ func (c *aWSIAMRoles) List(opts metav1.ListOptions) (result *v1.AWSIAMRoleList, 
 		Resource("awsiamroles").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Timeout(timeout).
-		Do().
+		Do(ctx).
 		Into(result)
 	return
 }
 
 // Watch returns a watch.Interface that watches the requested aWSIAMRoles.
-func (c *aWSIAMRoles) Watch(opts metav1.ListOptions) (watch.Interface, error) {
+func (c *aWSIAMRoles) Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error) {
 	var timeout time.Duration
 	if opts.TimeoutSeconds != nil {
 		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
@@ -105,87 +106,90 @@ func (c *aWSIAMRoles) Watch(opts metav1.ListOptions) (watch.Interface, error) {
 		Resource("awsiamroles").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Timeout(timeout).
-		Watch()
+		Watch(ctx)
 }
 
 // Create takes the representation of a aWSIAMRole and creates it.  Returns the server's representation of the aWSIAMRole, and an error, if there is any.
-func (c *aWSIAMRoles) Create(aWSIAMRole *v1.AWSIAMRole) (result *v1.AWSIAMRole, err error) {
+func (c *aWSIAMRoles) Create(ctx context.Context, aWSIAMRole *v1.AWSIAMRole, opts metav1.CreateOptions) (result *v1.AWSIAMRole, err error) {
 	result = &v1.AWSIAMRole{}
 	err = c.client.Post().
 		Namespace(c.ns).
 		Resource("awsiamroles").
+		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(aWSIAMRole).
-		Do().
+		Do(ctx).
 		Into(result)
 	return
 }
 
 // Update takes the representation of a aWSIAMRole and updates it. Returns the server's representation of the aWSIAMRole, and an error, if there is any.
-func (c *aWSIAMRoles) Update(aWSIAMRole *v1.AWSIAMRole) (result *v1.AWSIAMRole, err error) {
+func (c *aWSIAMRoles) Update(ctx context.Context, aWSIAMRole *v1.AWSIAMRole, opts metav1.UpdateOptions) (result *v1.AWSIAMRole, err error) {
 	result = &v1.AWSIAMRole{}
 	err = c.client.Put().
 		Namespace(c.ns).
 		Resource("awsiamroles").
 		Name(aWSIAMRole.Name).
+		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(aWSIAMRole).
-		Do().
+		Do(ctx).
 		Into(result)
 	return
 }
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-
-func (c *aWSIAMRoles) UpdateStatus(aWSIAMRole *v1.AWSIAMRole) (result *v1.AWSIAMRole, err error) {
+func (c *aWSIAMRoles) UpdateStatus(ctx context.Context, aWSIAMRole *v1.AWSIAMRole, opts metav1.UpdateOptions) (result *v1.AWSIAMRole, err error) {
 	result = &v1.AWSIAMRole{}
 	err = c.client.Put().
 		Namespace(c.ns).
 		Resource("awsiamroles").
 		Name(aWSIAMRole.Name).
 		SubResource("status").
+		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(aWSIAMRole).
-		Do().
+		Do(ctx).
 		Into(result)
 	return
 }
 
 // Delete takes name of the aWSIAMRole and deletes it. Returns an error if one occurs.
-func (c *aWSIAMRoles) Delete(name string, options *metav1.DeleteOptions) error {
+func (c *aWSIAMRoles) Delete(ctx context.Context, name string, opts metav1.DeleteOptions) error {
 	return c.client.Delete().
 		Namespace(c.ns).
 		Resource("awsiamroles").
 		Name(name).
-		Body(options).
-		Do().
+		Body(&opts).
+		Do(ctx).
 		Error()
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *aWSIAMRoles) DeleteCollection(options *metav1.DeleteOptions, listOptions metav1.ListOptions) error {
+func (c *aWSIAMRoles) DeleteCollection(ctx context.Context, opts metav1.DeleteOptions, listOpts metav1.ListOptions) error {
 	var timeout time.Duration
-	if listOptions.TimeoutSeconds != nil {
-		timeout = time.Duration(*listOptions.TimeoutSeconds) * time.Second
+	if listOpts.TimeoutSeconds != nil {
+		timeout = time.Duration(*listOpts.TimeoutSeconds) * time.Second
 	}
 	return c.client.Delete().
 		Namespace(c.ns).
 		Resource("awsiamroles").
-		VersionedParams(&listOptions, scheme.ParameterCodec).
+		VersionedParams(&listOpts, scheme.ParameterCodec).
 		Timeout(timeout).
-		Body(options).
-		Do().
+		Body(&opts).
+		Do(ctx).
 		Error()
 }
 
 // Patch applies the patch and returns the patched aWSIAMRole.
-func (c *aWSIAMRoles) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1.AWSIAMRole, err error) {
+func (c *aWSIAMRoles) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *v1.AWSIAMRole, err error) {
 	result = &v1.AWSIAMRole{}
 	err = c.client.Patch(pt).
 		Namespace(c.ns).
 		Resource("awsiamroles").
-		SubResource(subresources...).
 		Name(name).
+		SubResource(subresources...).
+		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(data).
-		Do().
+		Do(ctx).
 		Into(result)
 	return
 }

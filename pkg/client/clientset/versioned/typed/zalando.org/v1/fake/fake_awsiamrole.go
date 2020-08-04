@@ -1,5 +1,5 @@
 /*
-Copyright 2019 The Kubernetes Authors.
+Copyright 2020 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,6 +19,8 @@ limitations under the License.
 package fake
 
 import (
+	"context"
+
 	zalandoorgv1 "github.com/zalando-incubator/kube-aws-iam-controller/pkg/apis/zalando.org/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
@@ -39,7 +41,7 @@ var awsiamrolesResource = schema.GroupVersionResource{Group: "zalando.org", Vers
 var awsiamrolesKind = schema.GroupVersionKind{Group: "zalando.org", Version: "v1", Kind: "AWSIAMRole"}
 
 // Get takes name of the aWSIAMRole, and returns the corresponding aWSIAMRole object, and an error if there is any.
-func (c *FakeAWSIAMRoles) Get(name string, options v1.GetOptions) (result *zalandoorgv1.AWSIAMRole, err error) {
+func (c *FakeAWSIAMRoles) Get(ctx context.Context, name string, options v1.GetOptions) (result *zalandoorgv1.AWSIAMRole, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewGetAction(awsiamrolesResource, c.ns, name), &zalandoorgv1.AWSIAMRole{})
 
@@ -50,7 +52,7 @@ func (c *FakeAWSIAMRoles) Get(name string, options v1.GetOptions) (result *zalan
 }
 
 // List takes label and field selectors, and returns the list of AWSIAMRoles that match those selectors.
-func (c *FakeAWSIAMRoles) List(opts v1.ListOptions) (result *zalandoorgv1.AWSIAMRoleList, err error) {
+func (c *FakeAWSIAMRoles) List(ctx context.Context, opts v1.ListOptions) (result *zalandoorgv1.AWSIAMRoleList, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewListAction(awsiamrolesResource, awsiamrolesKind, c.ns, opts), &zalandoorgv1.AWSIAMRoleList{})
 
@@ -72,14 +74,14 @@ func (c *FakeAWSIAMRoles) List(opts v1.ListOptions) (result *zalandoorgv1.AWSIAM
 }
 
 // Watch returns a watch.Interface that watches the requested aWSIAMRoles.
-func (c *FakeAWSIAMRoles) Watch(opts v1.ListOptions) (watch.Interface, error) {
+func (c *FakeAWSIAMRoles) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
 		InvokesWatch(testing.NewWatchAction(awsiamrolesResource, c.ns, opts))
 
 }
 
 // Create takes the representation of a aWSIAMRole and creates it.  Returns the server's representation of the aWSIAMRole, and an error, if there is any.
-func (c *FakeAWSIAMRoles) Create(aWSIAMRole *zalandoorgv1.AWSIAMRole) (result *zalandoorgv1.AWSIAMRole, err error) {
+func (c *FakeAWSIAMRoles) Create(ctx context.Context, aWSIAMRole *zalandoorgv1.AWSIAMRole, opts v1.CreateOptions) (result *zalandoorgv1.AWSIAMRole, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewCreateAction(awsiamrolesResource, c.ns, aWSIAMRole), &zalandoorgv1.AWSIAMRole{})
 
@@ -90,7 +92,7 @@ func (c *FakeAWSIAMRoles) Create(aWSIAMRole *zalandoorgv1.AWSIAMRole) (result *z
 }
 
 // Update takes the representation of a aWSIAMRole and updates it. Returns the server's representation of the aWSIAMRole, and an error, if there is any.
-func (c *FakeAWSIAMRoles) Update(aWSIAMRole *zalandoorgv1.AWSIAMRole) (result *zalandoorgv1.AWSIAMRole, err error) {
+func (c *FakeAWSIAMRoles) Update(ctx context.Context, aWSIAMRole *zalandoorgv1.AWSIAMRole, opts v1.UpdateOptions) (result *zalandoorgv1.AWSIAMRole, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewUpdateAction(awsiamrolesResource, c.ns, aWSIAMRole), &zalandoorgv1.AWSIAMRole{})
 
@@ -102,7 +104,7 @@ func (c *FakeAWSIAMRoles) Update(aWSIAMRole *zalandoorgv1.AWSIAMRole) (result *z
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeAWSIAMRoles) UpdateStatus(aWSIAMRole *zalandoorgv1.AWSIAMRole) (*zalandoorgv1.AWSIAMRole, error) {
+func (c *FakeAWSIAMRoles) UpdateStatus(ctx context.Context, aWSIAMRole *zalandoorgv1.AWSIAMRole, opts v1.UpdateOptions) (*zalandoorgv1.AWSIAMRole, error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewUpdateSubresourceAction(awsiamrolesResource, "status", c.ns, aWSIAMRole), &zalandoorgv1.AWSIAMRole{})
 
@@ -113,7 +115,7 @@ func (c *FakeAWSIAMRoles) UpdateStatus(aWSIAMRole *zalandoorgv1.AWSIAMRole) (*za
 }
 
 // Delete takes name of the aWSIAMRole and deletes it. Returns an error if one occurs.
-func (c *FakeAWSIAMRoles) Delete(name string, options *v1.DeleteOptions) error {
+func (c *FakeAWSIAMRoles) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	_, err := c.Fake.
 		Invokes(testing.NewDeleteAction(awsiamrolesResource, c.ns, name), &zalandoorgv1.AWSIAMRole{})
 
@@ -121,15 +123,15 @@ func (c *FakeAWSIAMRoles) Delete(name string, options *v1.DeleteOptions) error {
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *FakeAWSIAMRoles) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(awsiamrolesResource, c.ns, listOptions)
+func (c *FakeAWSIAMRoles) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
+	action := testing.NewDeleteCollectionAction(awsiamrolesResource, c.ns, listOpts)
 
 	_, err := c.Fake.Invokes(action, &zalandoorgv1.AWSIAMRoleList{})
 	return err
 }
 
 // Patch applies the patch and returns the patched aWSIAMRole.
-func (c *FakeAWSIAMRoles) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *zalandoorgv1.AWSIAMRole, err error) {
+func (c *FakeAWSIAMRoles) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *zalandoorgv1.AWSIAMRole, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewPatchSubresourceAction(awsiamrolesResource, c.ns, name, pt, data, subresources...), &zalandoorgv1.AWSIAMRole{})
 

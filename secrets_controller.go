@@ -116,7 +116,7 @@ func (c *SecretsController) Run(ctx context.Context) {
 	go c.watchPods(ctx)
 
 	for {
-		err := c.refresh()
+		err := c.refresh(ctx)
 		if err != nil {
 			log.Error(err)
 		}
@@ -150,12 +150,12 @@ func (c *SecretsController) watchPods(ctx context.Context) {
 // refresh checks for soon to expire secrets and requests new credentials. It
 // also looks for roles where secrets are missing and creates the secrets for
 // the designated namespace.
-func (c *SecretsController) refresh() error {
+func (c *SecretsController) refresh(ctx context.Context) error {
 	opts := metav1.ListOptions{
 		LabelSelector: labels.Set(ownerLabels).AsSelector().String(),
 	}
 
-	secrets, err := c.client.CoreV1().Secrets(c.namespace).List(opts)
+	secrets, err := c.client.CoreV1().Secrets(c.namespace).List(ctx, opts)
 	if err != nil {
 		return err
 	}
@@ -178,7 +178,7 @@ func (c *SecretsController) refresh() error {
 
 		if !c.roleStore.Exists(role, secret.Namespace) {
 			// TODO: mark for deletion first
-			err := c.client.CoreV1().Secrets(secret.Namespace).Delete(secret.Name, nil)
+			err := c.client.CoreV1().Secrets(secret.Namespace).Delete(ctx, secret.Name, metav1.DeleteOptions{})
 			if err != nil {
 				log.Errorf("Failed to delete secret %s/%s: %v", secret.Namespace, secret.Name, err)
 				continue
@@ -217,7 +217,7 @@ func (c *SecretsController) refresh() error {
 			}
 
 			// update secret with refreshed credentials
-			_, err := c.client.CoreV1().Secrets(secret.Namespace).Update(&secret)
+			_, err := c.client.CoreV1().Secrets(secret.Namespace).Update(ctx, &secret, metav1.UpdateOptions{})
 			if err != nil {
 				log.Errorf("Failed to update secret %s/%s: %v", secret.Namespace, secret.Name, err)
 				continue
@@ -262,7 +262,7 @@ func (c *SecretsController) refresh() error {
 					Data: creds,
 				}
 
-				_, err := c.client.CoreV1().Secrets(ns).Create(secret)
+				_, err := c.client.CoreV1().Secrets(ns).Create(ctx, secret, metav1.CreateOptions{})
 				if err != nil {
 					log.Errorf("Failed to create secret %s/%s: %v", ns, name, err)
 					continue

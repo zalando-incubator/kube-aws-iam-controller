@@ -49,7 +49,7 @@ spec:
           value: /meta/aws-iam/credentials
         # must be set for the Java AWS SDK/AWS CLI to find the credentials file if you use the AWS SDK for Java v2
         - name: AWS_SHARED_CREDENTIALS_FILE
-          value: /meta/aws-iam/credentials
+          value: /meta/aws-iam/credentials.process
         volumeMounts:
         - name: aws-iam-credentials
           mountPath: /meta/aws-iam

@@ -13,7 +13,7 @@ guide for those that have support already.
 | [AWS CLI](#aws-cli) | :heavy_check_mark: | `>=1.16.43` | |
 | [Ruby AWS SDK](#) | :heavy_plus_sign: | | Supported but not yet tested ([aws-sdk-ruby/#1820](https://github.com/aws/aws-sdk-ruby/pull/1820)) |
 | [Golang AWS SDK](#golang-aws-sdk) | :heavy_check_mark: | `>=v1.16.2` | |
-| [JS AWS SDK](#) | :heavy_multiplication_x: | | Not yet supported ([aws-sdk-js/#1923](https://github.com/aws/aws-sdk-js/pull/1923)) |
+| [JS AWS SDK](#) | :heavy_plus_sign: | `>=2.429.0` |  |
 
 ## Java AWS SDK (JVM)
 

@@ -124,6 +124,8 @@ variables as shown in the example as well as mounting the secret named after the
 `AWSIAMRole` resource into the pod under `/meta/aws-iam`. This
 secret will be provisioned by the **kube-aws-iam-controller**.
 
+See full [JS example project](https://github.com/mikkeloscar/kube-aws-iam-controller-js-example).
+
 ## Python AWS SDK (boto3)
 
 | SDK | Tested version |

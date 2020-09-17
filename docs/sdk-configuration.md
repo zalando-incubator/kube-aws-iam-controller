@@ -96,7 +96,7 @@ spec:
         # must be set for the AWS SDK/AWS CLI to find the credentials file.
         - name: AWS_SDK_LOAD_CONFIG
           value: "true"
-        - name: AWS_SHARED_CREDENTIALS_FILE # used by python SDK
+        - name: AWS_SHARED_CREDENTIALS_FILE # used by JS SDK
           value: /meta/aws-iam/credentials.process
         - name: AWS_CONFIG_FILE
           value: /meta/aws-iam/credentials.process

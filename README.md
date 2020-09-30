@@ -357,12 +357,12 @@ Resources:
 $ aws cloudformation create-stack --stack-name kube-aws-iam-controller-role --template-body=file://role.yaml --capabilities CAPABILITY_NAMED_IAM
 ```
 
-And then you can use the script `./scripts/get_credentials.sh` to generate
-initial credentials and create a secret.
+And then you can use the script `./scripts/set_secret.sh` to generate
+initial credentials and create a secret.  The script requires the ARN of the
+created IAM role as an argument.
 
 ```sh
-$ export ARN="arn.of.the.iam.role"
-$ kubectl create secret generic kube-aws-iam-controller-iam-role --from-literal "credentials.json=$(./scripts/get_credentials.sh "$ARN")" --from-literal "credentials.process=$(printf "[default]\ncredential_process = cat /meta/aws-iam/credentials.json\n")"
+$ ./scripts/set_secret.sh $IAM_ROLE_ARN
 ```
 
 Once the secret is created you can deploy the controller using the example

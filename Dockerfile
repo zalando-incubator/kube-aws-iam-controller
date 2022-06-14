@@ -1,4 +1,5 @@
-FROM container-registry.zalando.net/library/alpine-3.13:latest
+ARG BASE_IMAGE=registry.opensource.zalan.do/library/alpine-3.13:latest
+FROM ${BASE_IMAGE}
 
 ARG TARGETARCH
 

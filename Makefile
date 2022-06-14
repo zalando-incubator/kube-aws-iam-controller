@@ -66,4 +66,5 @@ build.push: build.docker
 
 build.push.multiarch: build.linux.amd64 build.linux.arm64
 	docker buildx create --config /etc/cdp-buildkitd.toml --driver-opt network=host --bootstrap --use
-	docker buildx build --rm -t "$(IMAGE):$(TAG)" -f $(DOCKERFILE) --platform linux/amd64,linux/arm64 --push .
+	docker buildx build --rm -t "$(IMAGE):$(TAG)" -f $(DOCKERFILE) --platform linux/amd64,linux/arm64 --push \
+	  --build-arg BASE_IMAGE=container-registry.zalando.net/library/alpine-3.13:latest .

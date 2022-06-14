@@ -23,9 +23,9 @@ pipeline:
         VERSION=$(git describe --tags --always --dirty)
       else
         IMAGE=registry-write.opensource.zalan.do/teapot/kube-aws-iam-controller-test
-        VERSION="${CDP_BUILD_VERSION}"
+        VERSION=$CDP_BUILD_VERSION
       fi
-      IMAGE="${IMAGE}" VERSION="${VERSION}" make build.push
+      IMAGE=$IMAGE VERSION=$VERSION make build.push
   - desc: Build and push image to Zalando's registry
     cmd: |
       if [[ $CDP_TARGET_BRANCH == master && ! $CDP_PULL_REQUEST_NUMBER ]]; then

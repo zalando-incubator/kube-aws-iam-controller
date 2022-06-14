@@ -26,3 +26,14 @@ pipeline:
         VERSION=$CDP_BUILD_VERSION
       fi
       IMAGE=$IMAGE VERSION=$VERSION make build.push
+  - desc: Build and push image to Zalando's registry
+    cmd: |
+      if [[ $CDP_TARGET_BRANCH == master && ! $CDP_PULL_REQUEST_NUMBER ]]; then
+        IMAGE=container-registry-test.zalando.net/teapot/kube-aws-iam-controller
+        VERSION=$(git describe --tags --always --dirty)
+      else
+        IMAGE=container-registry-test.zalando.net/teapot/kube-aws-iam-controller-test
+        VERSION="${CDP_BUILD_VERSION}"
+      fi
+      IMAGE="${IMAGE}" VERSION="${VERSION}" make build.push.multiarch
+      cdp-promote-image "${IMAGE}:${VERSION}"

@@ -28,20 +28,43 @@ $(GENERATED):
 	./hack/update-codegen.sh
 
 build.local: build/$(BINARY)
-build.linux: build/linux/$(BINARY)
-build.osx: build/osx/$(BINARY)
 
 build/$(BINARY): go.mod $(GENERATED) $(SOURCES)
 	CGO_ENABLED=0 go build -o build/$(BINARY) $(BUILD_FLAGS) -ldflags "$(LDFLAGS)" .
 
+build.linux: build/linux/$(BINARY)
+build.linux.amd64: build/linux/amd64/$(BINARY)
+build.linux.arm64: build/linux/arm64/$(BINARY)
+
 build/linux/$(BINARY): go.mod $(GENERATED) $(SOURCES)
-	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build $(BUILD_FLAGS) -o build/linux/$(BINARY) -ldflags "$(LDFLAGS)" .
+	GOOS=linux CGO_ENABLED=0 go build $(BUILD_FLAGS) -o build/linux/$(BINARY) -ldflags "$(LDFLAGS)" .
+
+build/linux/amd64/$(BINARY): go.mod $(GENERATED) $(SOURCES)
+	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build $(BUILD_FLAGS) -o build/linux/amd64/$(BINARY) -ldflags "$(LDFLAGS)" .
+
+build/linux/arm64/$(BINARY): go.mod $(GENERATED) $(SOURCES)
+	GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build $(BUILD_FLAGS) -o build/linux/arm64/$(BINARY) -ldflags "$(LDFLAGS)" .
+
+build.osx: build/osx/$(BINARY)
+build.osx.amd64: build/osx/amd64/$(BINARY)
+build.osx.arm64: build/osx/arm64/$(BINARY)
 
 build/osx/$(BINARY): go.mod $(GENERATED) $(SOURCES)
-	GOOS=darwin GOARCH=amd64 CGO_ENABLED=0 go build $(BUILD_FLAGS) -o build/osx/$(BINARY) -ldflags "$(LDFLAGS)" .
+	GOOS=darwin CGO_ENABLED=0 go build $(BUILD_FLAGS) -o build/osx/$(BINARY) -ldflags "$(LDFLAGS)" .
+
+build/osx/amd64/$(BINARY): go.mod $(GENERATED) $(SOURCES)
+	GOOS=darwin GOARCH=amd64 CGO_ENABLED=0 go build $(BUILD_FLAGS) -o build/osx/amd64/$(BINARY) -ldflags "$(LDFLAGS)" .
+
+build/osx/arm64/$(BINARY): go.mod $(GENERATED) $(SOURCES)
+	GOOS=darwin GOARCH=arm64 CGO_ENABLED=0 go build $(BUILD_FLAGS) -o build/osx/arm64/$(BINARY) -ldflags "$(LDFLAGS)" .
 
 build.docker: build.linux
-	docker build --rm -t "$(IMAGE):$(TAG)" -f $(DOCKERFILE) .
+	docker build --rm -t "$(IMAGE):$(TAG)" -f $(DOCKERFILE) --build-arg TARGETARCH= .
 
 build.push: build.docker
 	docker push "$(IMAGE):$(TAG)"
+
+build.push.multiarch: build.linux.amd64 build.linux.arm64
+	docker buildx create --config /etc/cdp-buildkitd.toml --driver-opt network=host --bootstrap --use
+	docker buildx build --rm -t "$(IMAGE):$(TAG)" -f $(DOCKERFILE) --platform linux/amd64,linux/arm64 --push \
+	  --build-arg BASE_IMAGE=container-registry.zalando.net/library/alpine-3.13:latest .

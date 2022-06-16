@@ -16,7 +16,7 @@ pipeline:
   - desc: build
     cmd: |
       make build.docker
-  - desc: push
+  - desc: Build and push image to PierOne
     cmd: |
       if [[ $CDP_TARGET_BRANCH == master && ! $CDP_PULL_REQUEST_NUMBER ]]; then
         IMAGE=registry-write.opensource.zalan.do/teapot/kube-aws-iam-controller

@@ -36,6 +36,13 @@ spec:
           requests:
             cpu: 25m
             memory: 100Mi
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+          failureThreshold: 5
+          initialDelaySecond: 10
+          periodSeconds: 10
       volumes:
       - name: aws-iam-credentials
         secret:

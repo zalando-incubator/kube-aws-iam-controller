@@ -34,6 +34,7 @@ aws_expiration = %s
 credential_process = cat /meta/aws-iam/credentials.json
 `
 	credentialsJSONFileKey = "credentials.json"
+	healthEndpointAddress  = ":8080"
 )
 
 var (
@@ -133,6 +134,9 @@ func (c *SecretsController) Run(ctx context.Context) {
 
 	// Add the liveness endpoint at /healthz
 	http.HandleFunc("/healthz", c.HealthReporter.LiveEndpoint)
+
+	// Start the HTTP server
+	http.ListenAndServe(healthEndpointAddress, nil)
 
 	for {
 		select {

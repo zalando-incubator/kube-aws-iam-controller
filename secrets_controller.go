@@ -4,11 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"strings"
 	"time"
 
+	"github.com/heptiolabs/healthcheck"
 	log "github.com/sirupsen/logrus"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"
@@ -41,13 +43,14 @@ var (
 // SecretsController is a controller which listens for pod events and updates
 // secrets with AWS IAM roles as requested by pods.
 type SecretsController struct {
-	client       kubernetes.Interface
-	interval     time.Duration
-	refreshLimit time.Duration
-	creds        CredentialsGetter
-	roleStore    *RoleStore
-	podEvents    <-chan *PodEvent
-	namespace    string
+	client         kubernetes.Interface
+	interval       time.Duration
+	refreshLimit   time.Duration
+	creds          CredentialsGetter
+	roleStore      *RoleStore
+	podEvents      <-chan *PodEvent
+	namespace      string
+	HealthReporter healthcheck.Handler
 }
 
 // ProcessCredentials defines the format expected from process credentials.
@@ -113,16 +116,32 @@ func (c *SecretsController) getCreds(role string) (map[string][]byte, error) {
 // Run runs the secret controller loop. This will refresh secrets with AWS IAM
 // roles.
 func (c *SecretsController) Run(ctx context.Context) {
+	// Defining the liveness check
+	var nextRefresh time.Time
+
+	// If the controller hasn't refreshed credentials in a while, fail liveness
+	c.HealthReporter.AddLivenessCheck("nextRefresh", func() error {
+		if time.Since(nextRefresh) > 5*c.interval {
+			return fmt.Errorf("nextRefresh too old")
+		}
+		return nil
+	})
+
 	go c.watchPods(ctx)
 
-	for {
-		err := c.refresh(ctx)
-		if err != nil {
-			log.Error(err)
-		}
+	nextRefresh = time.Now().Add(-c.interval)
 
+	// Add the liveness endpoint at /healthz
+	http.HandleFunc("/healthz", c.HealthReporter.LiveEndpoint)
+
+	for {
 		select {
-		case <-time.After(c.interval):
+		case <-time.After(time.Until(nextRefresh)):
+			nextRefresh = time.Now().Add(c.interval)
+			err := c.refresh(ctx)
+			if err != nil {
+				log.Error(err)
+			}
 		case <-ctx.Done():
 			log.Info("Terminating main controller loop.")
 			return

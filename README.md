@@ -60,7 +60,7 @@ See the [configuration guide for supported SDKs](/docs/sdk-configuration.md).
 
 The controller continuously looks for custom `AWSIAMRole` resources which
 specify an AWS IAM role by name or by the full ARN. For each resource it finds,
-it will generate/update corresponding secrets containing credentialds for the
+it will generate/update corresponding secrets containing credentials for the
 IAM role specified.
 The secrets can be mounted by pods as a file enabling the
 AWS SDKs to use the credentials.
@@ -309,7 +309,7 @@ $ /usr/sbin/iptables \
 
 Where `cni0` is the interface of the pod network on the node.
 
-**Note**: The controller will read all pods on startup and therefor the memory
+**Note**: The controller will read all pods on startup and therefore the memory
 limit for the pod must be set relative to the number of pods in the cluster
 (i.e. vertical scaling).
 

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"net/http"
 	"net/url"
 	"os"
 	"os/signal"
@@ -23,6 +24,7 @@ const (
 	defaultRefreshLimit    = "15m"
 	defaultEventQueueSize  = "10"
 	defaultClientGOTimeout = 30 * time.Second
+	healthEndpointAddress  = ":8080"
 )
 
 var (
@@ -128,6 +130,7 @@ func main() {
 	go awsIAMRoleController.Run(ctx)
 
 	podWatcher.Run(ctx)
+	serveHealthz(controller, healthEndpointAddress)
 	controller.Run(ctx)
 }
 
@@ -138,4 +141,16 @@ func handleSigterm(cancelFunc func()) {
 	<-signals
 	log.Info("Received Term signal. Terminating...")
 	cancelFunc()
+}
+
+// serve the HTTP endpoint for livenessProbe
+func serveHealthz(controller *SecretsController, address string) {
+	// Add the liveness endpoint at /healthz
+	http.HandleFunc("/healthz", controller.HealthReporter.LiveEndpoint)
+
+	// Start the HTTP server
+	err := http.ListenAndServe(address, nil)
+	if err != nil {
+		log.Error(err)
+	}
 }

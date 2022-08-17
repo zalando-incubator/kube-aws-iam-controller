@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"strings"
 	"time"
 
@@ -34,7 +33,6 @@ aws_expiration = %s
 credential_process = cat /meta/aws-iam/credentials.json
 `
 	credentialsJSONFileKey = "credentials.json"
-	healthEndpointAddress  = ":8080"
 )
 
 var (
@@ -119,15 +117,6 @@ func (c *SecretsController) getCreds(role string) (map[string][]byte, error) {
 func (c *SecretsController) Run(ctx context.Context) {
 	// Defining the liveness check
 	var nextRefresh time.Time
-
-	// Add the liveness endpoint at /healthz
-	http.HandleFunc("/healthz", c.HealthReporter.LiveEndpoint)
-
-	// Start the HTTP server
-	err := http.ListenAndServe(healthEndpointAddress, nil)
-	if err != nil {
-		log.Error(err)
-	}
 
 	// If the controller hasn't refreshed credentials in a while, fail liveness
 	c.HealthReporter.AddLivenessCheck("nextRefresh", func() error {

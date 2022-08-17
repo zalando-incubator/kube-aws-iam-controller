@@ -146,10 +146,10 @@ func handleSigterm(cancelFunc func()) {
 // serve the HTTP endpoint for livenessProbe
 func serveHealthz(controller *SecretsController, address string) {
 	// Add the liveness endpoint at /healthz
-	http.HandleFunc("/healthz", controller.HealthReporter.LiveEndpoint)
+	http.Handle("/healthz", controller.HealthReporter)
 
 	// Start the HTTP server
-	err := http.ListenAndServe(address, nil)
+	err := http.ListenAndServe(address, controller.HealthReporter)
 	if err != nil {
 		log.Error(err)
 	}

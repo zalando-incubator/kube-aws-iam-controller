@@ -120,6 +120,15 @@ func (c *SecretsController) Run(ctx context.Context) {
 	// Defining the liveness check
 	var nextRefresh time.Time
 
+	// Add the liveness endpoint at /healthz
+	http.HandleFunc("/healthz", c.HealthReporter.LiveEndpoint)
+
+	// Start the HTTP server
+	err := http.ListenAndServe(healthEndpointAddress, nil)
+	if err != nil {
+		log.Error(err)
+	}
+
 	// If the controller hasn't refreshed credentials in a while, fail liveness
 	c.HealthReporter.AddLivenessCheck("nextRefresh", func() error {
 		if time.Since(nextRefresh) > 5*c.interval {
@@ -131,15 +140,6 @@ func (c *SecretsController) Run(ctx context.Context) {
 	go c.watchPods(ctx)
 
 	nextRefresh = time.Now().Add(-c.interval)
-
-	// Add the liveness endpoint at /healthz
-	http.HandleFunc("/healthz", c.HealthReporter.LiveEndpoint)
-
-	// Start the HTTP server
-	err := http.ListenAndServe(healthEndpointAddress, nil)
-	if err != nil {
-		log.Error(err)
-	}
 
 	for {
 		select {

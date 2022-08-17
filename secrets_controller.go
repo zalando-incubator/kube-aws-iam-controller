@@ -136,7 +136,10 @@ func (c *SecretsController) Run(ctx context.Context) {
 	http.HandleFunc("/healthz", c.HealthReporter.LiveEndpoint)
 
 	// Start the HTTP server
-	http.ListenAndServe(healthEndpointAddress, nil)
+	err := http.ListenAndServe(healthEndpointAddress, nil)
+	if err != nil {
+		log.Error(err)
+	}
 
 	for {
 		select {

@@ -130,7 +130,7 @@ func main() {
 	go awsIAMRoleController.Run(ctx)
 
 	podWatcher.Run(ctx)
-	serveHealthz(controller, healthEndpointAddress)
+	go serveHealthz(controller, healthEndpointAddress)
 	controller.Run(ctx)
 }
 

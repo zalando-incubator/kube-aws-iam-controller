@@ -25,7 +25,7 @@ const (
 	defaultRefreshLimit    = "15m"
 	defaultEventQueueSize  = "10"
 	defaultClientGOTimeout = 30 * time.Second
-	healthEndpointAddress  = ":8080"
+	healthEndpointAddress  = ":7979"
 )
 
 var (

@@ -49,7 +49,7 @@ type SecretsController struct {
 	roleStore      *RoleStore
 	podEvents      <-chan *PodEvent
 	namespace      string
-	HealthReporter healthcheck.Handler
+	healthReporter healthcheck.Handler
 }
 
 // ProcessCredentials defines the format expected from process credentials.
@@ -63,15 +63,16 @@ type ProcessCredentials struct {
 }
 
 // NewSecretsController initializes a new SecretsController.
-func NewSecretsController(client kubernetes.Interface, namespace string, interval, refreshLimit time.Duration, creds CredentialsGetter, podEvents <-chan *PodEvent) *SecretsController {
+func NewSecretsController(client kubernetes.Interface, namespace string, interval, refreshLimit time.Duration, creds CredentialsGetter, podEvents <-chan *PodEvent, healthReporter healthcheck.Handler) *SecretsController {
 	return &SecretsController{
-		client:       client,
-		interval:     interval,
-		refreshLimit: refreshLimit,
-		creds:        creds,
-		roleStore:    NewRoleStore(),
-		podEvents:    podEvents,
-		namespace:    namespace,
+		client:         client,
+		interval:       interval,
+		refreshLimit:   refreshLimit,
+		creds:          creds,
+		roleStore:      NewRoleStore(),
+		podEvents:      podEvents,
+		namespace:      namespace,
+		healthReporter: healthReporter,
 	}
 }
 
@@ -115,12 +116,13 @@ func (c *SecretsController) getCreds(role string) (map[string][]byte, error) {
 // Run runs the secret controller loop. This will refresh secrets with AWS IAM
 // roles.
 func (c *SecretsController) Run(ctx context.Context) {
+	println("Controller is running!")
 	// Defining the liveness check
 	var nextRefresh time.Time
 
 	// If the controller hasn't refreshed credentials in a while, fail liveness
-	c.HealthReporter.AddLivenessCheck("nextRefresh", func() error {
-		if time.Since(nextRefresh) > 5*c.interval {
+	c.healthReporter.AddLivenessCheck("nextRefresh", func() error {
+		if time.Since(nextRefresh) > 5*(c.interval) {
 			return fmt.Errorf("nextRefresh too old")
 		}
 		return nil

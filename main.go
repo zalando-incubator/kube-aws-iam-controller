@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials/stscreds"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/heptiolabs/healthcheck"
 	log "github.com/sirupsen/logrus"
 	"github.com/zalando-incubator/kube-aws-iam-controller/pkg/clientset"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
@@ -106,6 +107,8 @@ func main() {
 
 	podsEventCh := make(chan *PodEvent, config.EventQueueSize)
 
+	healthReporter := healthcheck.NewHandler()
+
 	controller := NewSecretsController(
 		client,
 		config.Namespace,
@@ -113,6 +116,7 @@ func main() {
 		config.RefreshLimit,
 		credsGetter,
 		podsEventCh,
+		healthReporter,
 	)
 
 	podWatcher := NewPodWatcher(client, config.Namespace, podsEventCh)
@@ -130,7 +134,11 @@ func main() {
 	go awsIAMRoleController.Run(ctx)
 
 	podWatcher.Run(ctx)
-	go serveHealthz(controller, healthEndpointAddress)
+	go serveHealthz(healthEndpointAddress)
+
+	// Add the liveness endpoint at /healthz
+	http.HandleFunc("/healthz", controller.healthReporter.LiveEndpoint)
+
 	controller.Run(ctx)
 }
 
@@ -144,12 +152,11 @@ func handleSigterm(cancelFunc func()) {
 }
 
 // serve the HTTP endpoint for livenessProbe
-func serveHealthz(controller *SecretsController, address string) {
-	// Add the liveness endpoint at /healthz
-	http.Handle("/healthz", controller.HealthReporter)
+func serveHealthz(address string) {
+	println("Endpoint is live!")
 
 	// Start the HTTP server
-	err := http.ListenAndServe(address, controller.HealthReporter)
+	err := http.ListenAndServe(address, nil)
 	if err != nil {
 		log.Error(err)
 	}

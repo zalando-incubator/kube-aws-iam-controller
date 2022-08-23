@@ -1,5 +1,5 @@
 /*
-Copyright 2020 The Kubernetes Authors.
+Copyright 2022 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -26,8 +26,10 @@ import (
 )
 
 // AWSIAMRoleLister helps list AWSIAMRoles.
+// All objects returned here must be treated as read-only.
 type AWSIAMRoleLister interface {
 	// List lists all AWSIAMRoles in the indexer.
+	// Objects returned here must be treated as read-only.
 	List(selector labels.Selector) (ret []*v1.AWSIAMRole, err error)
 	// AWSIAMRoles returns an object that can list and get AWSIAMRoles.
 	AWSIAMRoles(namespace string) AWSIAMRoleNamespaceLister
@@ -58,10 +60,13 @@ func (s *aWSIAMRoleLister) AWSIAMRoles(namespace string) AWSIAMRoleNamespaceList
 }
 
 // AWSIAMRoleNamespaceLister helps list and get AWSIAMRoles.
+// All objects returned here must be treated as read-only.
 type AWSIAMRoleNamespaceLister interface {
 	// List lists all AWSIAMRoles in the indexer for a given namespace.
+	// Objects returned here must be treated as read-only.
 	List(selector labels.Selector) (ret []*v1.AWSIAMRole, err error)
 	// Get retrieves the AWSIAMRole from the indexer for a given namespace and name.
+	// Objects returned here must be treated as read-only.
 	Get(name string) (*v1.AWSIAMRole, error)
 	AWSIAMRoleNamespaceListerExpansion
 }

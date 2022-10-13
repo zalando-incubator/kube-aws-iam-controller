@@ -116,7 +116,6 @@ func (c *SecretsController) getCreds(role string) (map[string][]byte, error) {
 // Run runs the secret controller loop. This will refresh secrets with AWS IAM
 // roles.
 func (c *SecretsController) Run(ctx context.Context) {
-	println("Controller is running!")
 	// Defining the liveness check
 	var nextRefresh time.Time
 

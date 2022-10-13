@@ -153,11 +153,11 @@ func handleSigterm(cancelFunc func()) {
 
 // serve the HTTP endpoint for livenessProbe
 func serveHealthz(address string) {
-	println("Endpoint is live!")
-
 	// Start the HTTP server
 	err := http.ListenAndServe(address, nil)
 	if err != nil {
 		log.Error(err)
+	} else {
+		log.Debug("Health server is running.")
 	}
 }

@@ -16,21 +16,24 @@ spec:
     served: true
     storage: true
     additionalPrinterColumns:
-      - jsonPath: .status.roleARN
-        name: RoleARN
-        type: string
-        description: Full RoleARN
-      - name: Expiration
-        type: string
-        description: Expiration time of the current credentials provisioned for the role
-        jsonPath: .status.expiration
+    - name: RoleARN
+      type: string
+      description: Full RoleARN
+      jsonPath: .status.roleARN
+    - name: Expiration
+      type: string
+      description: Expiration time of the current credentials provisioned for the role
+      jsonPath: .status.expiration
     subresources:
       # status enables the status subresource.
       status: {}
+    # validation depends on Kubernetes >= v1.11.0
     schema:
       openAPIV3Schema:
+        type: object
         properties:
           spec:
+            type: object
             properties:
               roleReference:
                 description: |
@@ -46,61 +49,8 @@ spec:
                 type: integer
                 minimum: 900   # 15 minutes
                 maximum: 43200 # 12 hours
-              roleDefinition:
-                properties:
-                  AssumeRolePolicyDocument:
-                    properties:
-                      Statement:
-                        type: array
-                        items:
-                          properties:
-                            Action:
-                              type: string
-                            Effect:
-                              type: string
-                            Principal:
-                              properties:
-                                Service:
-                                  type: string
-                  ManagedPolicyArns:
-                    type: array
-                    items:
-                      type: string
-                  # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-role.html#cfn-iam-role-maxsessionduration
-                  MaxSessionDuration:
-                    type: integer
-                    minimum: 3600  # 1 hour
-                    maximum: 43200 # 12 hours
-                  Path:
-                    type: string
-                  PermissionsBoundary:
-                    type: string
-                  Policies:
-                    properties:
-                      PolicyName:
-                        type: string
-                      PolicyDocument:
-                        properties:
-                          Version:
-                            type: string
-                            enum: ["2012-10-17"]
-                          Statement:
-                            type: array
-                            items:
-                              properties:
-                                Effect:
-                                  type: string
-                                  enum: ["Allow", "Deny"]
-                                Action:
-                                  type: array
-                                  items:
-                                    type: string
-                                Resource:
-                                  type: string
-                    required:
-                    - PolicyName
-                    - PolicyDocument
           status:
+            type: object
             properties:
               observedGeneration:
                 type: integer

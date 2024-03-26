@@ -41,9 +41,9 @@ type STSCredentialsGetter struct {
 }
 
 // NewSTSCredentialsGetter initializes a new STS based credentials fetcher.
-func NewSTSCredentialsGetter(sess *session.Session, baseRoleARN, baseRoleARNPrefix string, configs ...*aws.Config) *STSCredentialsGetter {
+func NewSTSCredentialsGetter(sess *session.Session, baseRoleARN, baseRoleARNPrefix string, config *aws.Config) *STSCredentialsGetter {
 	return &STSCredentialsGetter{
-		svc:               sts.New(sess, configs...),
+		svc:               sts.New(sess, config),
 		baseRoleARN:       baseRoleARN,
 		baseRoleARNPrefix: baseRoleARNPrefix,
 	}

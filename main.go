@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"net/http"
 	"net/url"
 	"os"
 	"os/signal"
@@ -13,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials/stscreds"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/heptiolabs/healthcheck"
 	log "github.com/sirupsen/logrus"
 	"github.com/zalando-incubator/kube-aws-iam-controller/pkg/clientset"
 	v1 "k8s.io/api/core/v1"
@@ -23,6 +25,7 @@ const (
 	defaultRefreshLimit    = "15m"
 	defaultEventQueueSize  = "10"
 	defaultClientGOTimeout = 30 * time.Second
+	healthEndpointAddress  = ":7979"
 )
 
 var (
@@ -104,6 +107,8 @@ func main() {
 
 	podsEventCh := make(chan *PodEvent, config.EventQueueSize)
 
+	healthReporter := healthcheck.NewHandler()
+
 	controller := NewSecretsController(
 		client,
 		config.Namespace,
@@ -111,6 +116,7 @@ func main() {
 		config.RefreshLimit,
 		credsGetter,
 		podsEventCh,
+		healthReporter,
 	)
 
 	podWatcher := NewPodWatcher(client, config.Namespace, podsEventCh)
@@ -128,6 +134,11 @@ func main() {
 	go awsIAMRoleController.Run(ctx)
 
 	podWatcher.Run(ctx)
+	go serveHealthz(healthEndpointAddress)
+
+	// Add the liveness endpoint at /healthz
+	http.HandleFunc("/healthz", controller.healthReporter.LiveEndpoint)
+
 	controller.Run(ctx)
 }
 
@@ -138,4 +149,15 @@ func handleSigterm(cancelFunc func()) {
 	<-signals
 	log.Info("Received Term signal. Terminating...")
 	cancelFunc()
+}
+
+// serve the HTTP endpoint for livenessProbe
+func serveHealthz(address string) {
+	// Start the HTTP server
+	err := http.ListenAndServe(address, nil)
+	if err != nil {
+		log.Error(err)
+	} else {
+		log.Debug("Health server is running.")
+	}
 }

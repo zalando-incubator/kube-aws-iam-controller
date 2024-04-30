@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/heptiolabs/healthcheck"
 	"github.com/stretchr/testify/require"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -164,6 +165,7 @@ func TestRefresh(tt *testing.T) {
 					},
 				},
 				make(chan *PodEvent, 1),
+				healthcheck.NewHandler(),
 			)
 
 			// setup secrets

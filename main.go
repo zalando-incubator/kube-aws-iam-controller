@@ -21,20 +21,18 @@ import (
 const (
 	defaultInterval        = "10s"
 	defaultRefreshLimit    = "15m"
-	defaultEventQueueSize  = "10"
 	defaultClientGOTimeout = 30 * time.Second
 )
 
 var (
 	config struct {
-		Debug          bool
-		Interval       time.Duration
-		RefreshLimit   time.Duration
-		EventQueueSize int
-		BaseRoleARN    string
-		APIServer      *url.URL
-		Namespace      string
-		AssumeRole     string
+		Debug        bool
+		Interval     time.Duration
+		RefreshLimit time.Duration
+		BaseRoleARN  string
+		APIServer    *url.URL
+		Namespace    string
+		AssumeRole   string
 	}
 )
 
@@ -44,8 +42,6 @@ func main() {
 		Default(defaultInterval).DurationVar(&config.Interval)
 	kingpin.Flag("refresh-limit", "Time limit when AWS IAM credentials should be refreshed. I.e. 15 min. before they expire.").
 		Default(defaultRefreshLimit).DurationVar(&config.RefreshLimit)
-	kingpin.Flag("event-queue-size", "Size of the pod event queue.").
-		Default(defaultEventQueueSize).IntVar(&config.EventQueueSize)
 	kingpin.Flag("base-role-arn", "Base Role ARN. If not defined it will be autodiscovered from EC2 Metadata.").
 		StringVar(&config.BaseRoleARN)
 	kingpin.Flag("assume-role", "Assume Role can be specified to assume a role at start-up which is used for further assuming other roles managed by the controller.").
@@ -102,18 +98,13 @@ func main() {
 
 	credsGetter := NewSTSCredentialsGetter(awsSess, config.BaseRoleARN, baseRoleARNPrefix, awsConfigs...)
 
-	podsEventCh := make(chan *PodEvent, config.EventQueueSize)
-
 	controller := NewSecretsController(
 		client,
 		config.Namespace,
 		config.Interval,
 		config.RefreshLimit,
 		credsGetter,
-		podsEventCh,
 	)
-
-	podWatcher := NewPodWatcher(client, config.Namespace, podsEventCh)
 
 	go handleSigterm(cancel)
 
@@ -127,7 +118,6 @@ func main() {
 
 	go awsIAMRoleController.Run(ctx)
 
-	podWatcher.Run(ctx)
 	controller.Run(ctx)
 }
 

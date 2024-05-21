@@ -163,7 +163,6 @@ func TestRefresh(tt *testing.T) {
 						Expiration:      timeFuture,
 					},
 				},
-				make(chan *PodEvent, 1),
 			)
 
 			// setup secrets

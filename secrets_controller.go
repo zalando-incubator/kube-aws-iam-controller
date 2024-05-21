@@ -49,7 +49,6 @@ type SecretsController struct {
 	refreshLimit   time.Duration
 	creds          CredentialsGetter
 	roleStore      *RoleStore
-	podEvents      <-chan *PodEvent
 	namespace      string
 	HealthReporter healthcheck.Handler
 }
@@ -65,14 +64,13 @@ type ProcessCredentials struct {
 }
 
 // NewSecretsController initializes a new SecretsController.
-func NewSecretsController(client kubernetes.Interface, namespace string, interval, refreshLimit time.Duration, creds CredentialsGetter, podEvents <-chan *PodEvent) *SecretsController {
+func NewSecretsController(client kubernetes.Interface, namespace string, interval, refreshLimit time.Duration, creds CredentialsGetter) *SecretsController {
 	return &SecretsController{
 		client:       client,
 		interval:     interval,
 		refreshLimit: refreshLimit,
 		creds:        creds,
 		roleStore:    NewRoleStore(),
-		podEvents:    podEvents,
 		namespace:    namespace,
 	}
 }
@@ -128,8 +126,6 @@ func (c *SecretsController) Run(ctx context.Context) {
 		return nil
 	})
 
-	go c.watchPods(ctx)
-
 	nextRefresh = time.Now().Add(-c.interval)
 
 	// Add the liveness endpoint at /healthz
@@ -148,23 +144,6 @@ func (c *SecretsController) Run(ctx context.Context) {
 			}
 		case <-ctx.Done():
 			log.Info("Terminating main controller loop.")
-			return
-		}
-	}
-}
-
-// watchPods listens for pod events on the podEvents queue and updates the
-// roleStore accordingly.
-func (c *SecretsController) watchPods(ctx context.Context) {
-	for {
-		select {
-		case event := <-c.podEvents:
-			if event.Deletion {
-				c.roleStore.Remove(event.Role, event.Namespace, event.Name)
-			} else {
-				c.roleStore.Add(event.Role, event.Namespace, event.Name)
-			}
-		case <-ctx.Done():
 			return
 		}
 	}

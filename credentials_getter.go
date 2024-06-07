@@ -1,16 +1,15 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/aws/ec2metadata"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/sts"
-	"github.com/aws/aws-sdk-go/service/sts/stsiface"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
+	"github.com/aws/aws-sdk-go-v2/service/sts"
 )
 
 const (
@@ -20,7 +19,7 @@ const (
 
 // CredentialsGetter can get credentials.
 type CredentialsGetter interface {
-	Get(role string, sessionDuration time.Duration) (*Credentials, error)
+	Get(ctx context.Context, role string, sessionDuration time.Duration) (*Credentials, error)
 }
 
 // Credentials defines fetched credentials including expiration time.
@@ -32,18 +31,22 @@ type Credentials struct {
 	Expiration      time.Time
 }
 
+type stsAPI interface {
+	AssumeRole(ctx context.Context, params *sts.AssumeRoleInput, optFns ...func(*sts.Options)) (*sts.AssumeRoleOutput, error)
+}
+
 // STSCredentialsGetter is a credentials getter for getting credentials from
 // STS.
 type STSCredentialsGetter struct {
-	svc               stsiface.STSAPI
+	svc               stsAPI
 	baseRoleARN       string
 	baseRoleARNPrefix string
 }
 
 // NewSTSCredentialsGetter initializes a new STS based credentials fetcher.
-func NewSTSCredentialsGetter(sess *session.Session, baseRoleARN, baseRoleARNPrefix string, configs ...*aws.Config) *STSCredentialsGetter {
+func NewSTSCredentialsGetter(cfg aws.Config, baseRoleARN, baseRoleARNPrefix string, configs ...*aws.Config) *STSCredentialsGetter {
 	return &STSCredentialsGetter{
-		svc:               sts.New(sess, configs...),
+		svc:               sts.NewFromConfig(cfg),
 		baseRoleARN:       baseRoleARN,
 		baseRoleARNPrefix: baseRoleARNPrefix,
 	}
@@ -51,7 +54,7 @@ func NewSTSCredentialsGetter(sess *session.Session, baseRoleARN, baseRoleARNPref
 
 // Get gets new credentials for the specified role. The credentials are fetched
 // via STS.
-func (c *STSCredentialsGetter) Get(role string, sessionDuration time.Duration) (*Credentials, error) {
+func (c *STSCredentialsGetter) Get(ctx context.Context, role string, sessionDuration time.Duration) (*Credentials, error) {
 	roleARN := c.baseRoleARN + role
 	if strings.HasPrefix(role, c.baseRoleARNPrefix) {
 		roleARN = role
@@ -65,28 +68,28 @@ func (c *STSCredentialsGetter) Get(role string, sessionDuration time.Duration) (
 	params := &sts.AssumeRoleInput{
 		RoleArn:         aws.String(roleARN),
 		RoleSessionName: aws.String(roleSessionName),
-		DurationSeconds: aws.Int64(int64(sessionDuration.Seconds())),
+		DurationSeconds: aws.Int32(int32(sessionDuration.Seconds())),
 	}
 
-	resp, err := c.svc.AssumeRole(params)
+	resp, err := c.svc.AssumeRole(ctx, params)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Credentials{
 		RoleARN:         roleARN,
-		AccessKeyID:     aws.StringValue(resp.Credentials.AccessKeyId),
-		SecretAccessKey: aws.StringValue(resp.Credentials.SecretAccessKey),
-		SessionToken:    aws.StringValue(resp.Credentials.SessionToken),
-		Expiration:      aws.TimeValue(resp.Credentials.Expiration),
+		AccessKeyID:     aws.ToString(resp.Credentials.AccessKeyId),
+		SecretAccessKey: aws.ToString(resp.Credentials.SecretAccessKey),
+		SessionToken:    aws.ToString(resp.Credentials.SessionToken),
+		Expiration:      aws.ToTime(resp.Credentials.Expiration),
 	}, nil
 }
 
 // GetBaseRoleARN gets base role ARN from EC2 metadata service.
-func GetBaseRoleARN(sess *session.Session) (string, error) {
-	metadata := ec2metadata.New(sess)
+func GetBaseRoleARN(ctx context.Context, cfg aws.Config) (string, error) {
+	metadata := imds.NewFromConfig(cfg)
 
-	iamInfo, err := metadata.IAMInfo()
+	iamInfo, err := metadata.GetIAMInfo(ctx, &imds.GetIAMInfoInput{})
 	if err != nil {
 		return "", err
 	}

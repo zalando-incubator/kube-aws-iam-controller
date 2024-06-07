@@ -78,8 +78,8 @@ func NewSecretsController(client kubernetes.Interface, namespace string, interva
 
 // getCreds gets new credentials from the CredentialsGetter and converts them
 // to a secret data map.
-func (c *SecretsController) getCreds(role string) (map[string][]byte, error) {
-	creds, err := c.creds.Get(role, 3600*time.Second)
+func (c *SecretsController) getCreds(ctx context.Context, role string) (map[string][]byte, error) {
+	creds, err := c.creds.Get(ctx, role, 3600*time.Second)
 	if err != nil {
 		return nil, err
 	}
@@ -213,7 +213,7 @@ func (c *SecretsController) refresh(ctx context.Context) error {
 		}
 
 		if refreshCreds {
-			secret.Data, err = c.getCreds(role)
+			secret.Data, err = c.getCreds(ctx, role)
 			if err != nil {
 				log.Errorf("Failed to get credentials for role %s: %v", role, err)
 				continue
@@ -245,7 +245,7 @@ func (c *SecretsController) refresh(ctx context.Context) error {
 	for role, namespaces := range c.roleStore.Store {
 		creds, ok := credsCache[role]
 		if !ok {
-			creds, err = c.getCreds(role)
+			creds, err = c.getCreds(ctx, role)
 			if err != nil {
 				log.Errorf("Failed to get credentials for role %s: %v", role, err)
 				continue

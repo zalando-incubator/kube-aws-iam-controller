@@ -50,7 +50,7 @@ type SecretsController struct {
 	creds          CredentialsGetter
 	roleStore      *RoleStore
 	namespace      string
-	HealthReporter healthcheck.Handler
+	healthReporter healthcheck.Handler
 }
 
 // ProcessCredentials defines the format expected from process credentials.
@@ -66,12 +66,13 @@ type ProcessCredentials struct {
 // NewSecretsController initializes a new SecretsController.
 func NewSecretsController(client kubernetes.Interface, namespace string, interval, refreshLimit time.Duration, creds CredentialsGetter) *SecretsController {
 	return &SecretsController{
-		client:       client,
-		interval:     interval,
-		refreshLimit: refreshLimit,
-		creds:        creds,
-		roleStore:    NewRoleStore(),
-		namespace:    namespace,
+		client:         client,
+		interval:       interval,
+		refreshLimit:   refreshLimit,
+		creds:          creds,
+		roleStore:      NewRoleStore(),
+		namespace:      namespace,
+		healthReporter: healthcheck.NewHandler(),
 	}
 }
 
@@ -119,7 +120,7 @@ func (c *SecretsController) Run(ctx context.Context) {
 	var nextRefresh time.Time
 
 	// If the controller hasn't refreshed credentials in a while, fail liveness
-	c.HealthReporter.AddLivenessCheck("nextRefresh", func() error {
+	c.healthReporter.AddLivenessCheck("nextRefresh", func() error {
 		if time.Since(nextRefresh) > 5*c.interval {
 			return fmt.Errorf("nextRefresh too old")
 		}
@@ -129,7 +130,7 @@ func (c *SecretsController) Run(ctx context.Context) {
 	nextRefresh = time.Now().Add(-c.interval)
 
 	// Add the liveness endpoint at /healthz
-	http.HandleFunc("/healthz", c.HealthReporter.LiveEndpoint)
+	http.HandleFunc("/healthz", c.healthReporter.LiveEndpoint)
 
 	// Start the HTTP server
 	http.ListenAndServe(healthEndpointAddress, nil)

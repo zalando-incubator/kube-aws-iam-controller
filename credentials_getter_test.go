@@ -1,24 +1,24 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"testing"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/sts"
-	"github.com/aws/aws-sdk-go/service/sts/stsiface"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awsconfig "github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/sts"
+	"github.com/aws/aws-sdk-go-v2/service/sts/types"
 	"github.com/stretchr/testify/require"
 )
 
 type mockSTSAPI struct {
-	stsiface.STSAPI
 	err            error
 	assumeRoleResp *sts.AssumeRoleOutput
 }
 
-func (sts *mockSTSAPI) AssumeRole(*sts.AssumeRoleInput) (*sts.AssumeRoleOutput, error) {
+func (sts *mockSTSAPI) AssumeRole(_ context.Context, _ *sts.AssumeRoleInput, optFns ...func(*sts.Options)) (*sts.AssumeRoleOutput, error) {
 	if sts.err != nil {
 		return nil, sts.err
 	}
@@ -26,12 +26,16 @@ func (sts *mockSTSAPI) AssumeRole(*sts.AssumeRoleInput) (*sts.AssumeRoleOutput, 
 }
 
 func TestGet(t *testing.T) {
-	sess := session.New(&aws.Config{Region: aws.String("region")})
-	getter := NewSTSCredentialsGetter(sess, "", "")
+	cfg, err := awsconfig.LoadDefaultConfig(context.Background())
+	if err != nil {
+		require.NoError(t, err)
+	}
+	cfg.Region = "region"
+	getter := NewSTSCredentialsGetter(cfg, "", "")
 	getter.svc = &mockSTSAPI{
 		err: nil,
 		assumeRoleResp: &sts.AssumeRoleOutput{
-			Credentials: &sts.Credentials{
+			Credentials: &types.Credentials{
 				AccessKeyId:     aws.String("access_key_id"),
 				SecretAccessKey: aws.String("secret_access_key"),
 				SessionToken:    aws.String("session_token"),
@@ -41,7 +45,7 @@ func TestGet(t *testing.T) {
 	}
 
 	roleARN := "arn:aws:iam::012345678910:role/role-name"
-	creds, err := getter.Get(roleARN, 3600*time.Second)
+	creds, err := getter.Get(context.Background(), roleARN, 3600*time.Second)
 	require.NoError(t, err)
 	require.Equal(t, "access_key_id", creds.AccessKeyID)
 	require.Equal(t, "secret_access_key", creds.SecretAccessKey)
@@ -53,7 +57,7 @@ func TestGet(t *testing.T) {
 	}
 	roleARNPrefix, err := GetPrefixFromARN(roleARN)
 	require.NoError(t, err)
-	_, err = getter.Get(roleARNPrefix+"role", 3600*time.Second)
+	_, err = getter.Get(context.Background(), roleARNPrefix+"role", 3600*time.Second)
 	require.Error(t, err)
 }
 

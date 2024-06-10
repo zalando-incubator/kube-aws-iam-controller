@@ -10,9 +10,9 @@ import (
 	"time"
 
 	kingpin "github.com/alecthomas/kingpin/v2"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials/stscreds"
-	"github.com/aws/aws-sdk-go/aws/session"
+	awsconfig "github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials/stscreds"
+	"github.com/aws/aws-sdk-go-v2/service/sts"
 	log "github.com/sirupsen/logrus"
 	"github.com/zalando-incubator/kube-aws-iam-controller/pkg/clientset"
 	v1 "k8s.io/api/core/v1"
@@ -66,13 +66,13 @@ func main() {
 		log.Fatalf("Failed to initialize Kubernetes client: %v.", err)
 	}
 
-	awsSess, err := session.NewSession()
+	awsCfg, err := awsconfig.LoadDefaultConfig(context.Background())
 	if err != nil {
-		log.Fatalf("Failed to set up AWS session: %v", err)
+		log.Fatalf("unable to load SDK config, %v", err)
 	}
 
 	if config.BaseRoleARN == "" {
-		config.BaseRoleARN, err = GetBaseRoleARN(awsSess)
+		config.BaseRoleARN, err = GetBaseRoleARN(context.Background(), awsCfg)
 		if err != nil {
 			log.Fatalf("Failed to autodiscover Base Role ARN: %v", err)
 		}
@@ -86,17 +86,17 @@ func main() {
 	}
 	log.Debugf("Parsed Base Role ARN prefix: %s", baseRoleARNPrefix)
 
-	awsConfigs := make([]*aws.Config, 0, 1)
 	if config.AssumeRole != "" {
 		if !strings.HasPrefix(config.AssumeRole, baseRoleARNPrefix) {
 			config.AssumeRole = config.BaseRoleARN + config.AssumeRole
 		}
 		log.Infof("Using custom Assume Role: %s", config.AssumeRole)
-		creds := stscreds.NewCredentials(awsSess, config.AssumeRole)
-		awsConfigs = append(awsConfigs, &aws.Config{Credentials: creds})
+		stssvc := sts.NewFromConfig(awsCfg)
+		creds := stscreds.NewAssumeRoleProvider(stssvc, config.AssumeRole)
+		awsCfg.Credentials = creds
 	}
 
-	credsGetter := NewSTSCredentialsGetter(awsSess, config.BaseRoleARN, baseRoleARNPrefix, awsConfigs...)
+	credsGetter := NewSTSCredentialsGetter(awsCfg, config.BaseRoleARN, baseRoleARNPrefix)
 
 	controller := NewSecretsController(
 		client,

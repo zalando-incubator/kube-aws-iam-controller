@@ -16,7 +16,7 @@ type mockCredsGetter struct {
 	creds *Credentials
 }
 
-func (g *mockCredsGetter) Get(role string, sessionDuration time.Duration) (*Credentials, error) {
+func (g *mockCredsGetter) Get(ctx context.Context, role string, sessionDuration time.Duration) (*Credentials, error) {
 	if g.err != nil {
 		return nil, g.err
 	}

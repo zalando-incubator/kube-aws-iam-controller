@@ -53,8 +53,8 @@ func NewAWSIAMRoleController(client clientset.Interface, interval, refreshLimit 
 
 // getCreds gets new credentials from the CredentialsGetter and converts them
 // to a secret data map.
-func (c *AWSIAMRoleController) getCreds(role string, sessionDuration time.Duration) (*Credentials, map[string][]byte, error) {
-	creds, err := c.creds.Get(role, sessionDuration)
+func (c *AWSIAMRoleController) getCreds(ctx context.Context, role string, sessionDuration time.Duration) (*Credentials, map[string][]byte, error) {
+	creds, err := c.creds.Get(ctx, role, sessionDuration)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -167,7 +167,7 @@ func (c *AWSIAMRoleController) refresh(ctx context.Context) error {
 
 		if refreshCreds {
 			var creds *Credentials
-			creds, secret.Data, err = c.getCreds(role, roleSessionDuration)
+			creds, secret.Data, err = c.getCreds(ctx, role, roleSessionDuration)
 			if err != nil {
 				c.recorder.Event(&awsIAMRole,
 					v1.EventTypeWarning,
@@ -260,7 +260,7 @@ func (c *AWSIAMRoleController) refresh(ctx context.Context) error {
 
 			if awsIAMRole.Generation != generation {
 				var creds *Credentials
-				creds, secret.Data, err = c.getCreds(role, roleSessionDuration)
+				creds, secret.Data, err = c.getCreds(ctx, role, roleSessionDuration)
 				if err != nil {
 					c.recorder.Event(&awsIAMRole,
 						v1.EventTypeWarning,
@@ -332,7 +332,7 @@ func (c *AWSIAMRoleController) refresh(ctx context.Context) error {
 			continue
 		}
 
-		creds, secretData, err := c.getCreds(role, roleSessionDuration)
+		creds, secretData, err := c.getCreds(ctx, role, roleSessionDuration)
 		if err != nil {
 			c.recorder.Event(&awsIAMRole,
 				v1.EventTypeWarning,

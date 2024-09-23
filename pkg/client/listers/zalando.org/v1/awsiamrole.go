@@ -20,8 +20,8 @@ package v1
 
 import (
 	v1 "github.com/zalando-incubator/kube-aws-iam-controller/pkg/apis/zalando.org/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/listers"
 	"k8s.io/client-go/tools/cache"
 )
 
@@ -38,25 +38,17 @@ type AWSIAMRoleLister interface {
 
 // aWSIAMRoleLister implements the AWSIAMRoleLister interface.
 type aWSIAMRoleLister struct {
-	indexer cache.Indexer
+	listers.ResourceIndexer[*v1.AWSIAMRole]
 }
 
 // NewAWSIAMRoleLister returns a new AWSIAMRoleLister.
 func NewAWSIAMRoleLister(indexer cache.Indexer) AWSIAMRoleLister {
-	return &aWSIAMRoleLister{indexer: indexer}
-}
-
-// List lists all AWSIAMRoles in the indexer.
-func (s *aWSIAMRoleLister) List(selector labels.Selector) (ret []*v1.AWSIAMRole, err error) {
-	err = cache.ListAll(s.indexer, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1.AWSIAMRole))
-	})
-	return ret, err
+	return &aWSIAMRoleLister{listers.New[*v1.AWSIAMRole](indexer, v1.Resource("awsiamrole"))}
 }
 
 // AWSIAMRoles returns an object that can list and get AWSIAMRoles.
 func (s *aWSIAMRoleLister) AWSIAMRoles(namespace string) AWSIAMRoleNamespaceLister {
-	return aWSIAMRoleNamespaceLister{indexer: s.indexer, namespace: namespace}
+	return aWSIAMRoleNamespaceLister{listers.NewNamespaced[*v1.AWSIAMRole](s.ResourceIndexer, namespace)}
 }
 
 // AWSIAMRoleNamespaceLister helps list and get AWSIAMRoles.
@@ -74,26 +66,5 @@ type AWSIAMRoleNamespaceLister interface {
 // aWSIAMRoleNamespaceLister implements the AWSIAMRoleNamespaceLister
 // interface.
 type aWSIAMRoleNamespaceLister struct {
-	indexer   cache.Indexer
-	namespace string
-}
-
-// List lists all AWSIAMRoles in the indexer for a given namespace.
-func (s aWSIAMRoleNamespaceLister) List(selector labels.Selector) (ret []*v1.AWSIAMRole, err error) {
-	err = cache.ListAllByNamespace(s.indexer, s.namespace, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1.AWSIAMRole))
-	})
-	return ret, err
-}
-
-// Get retrieves the AWSIAMRole from the indexer for a given namespace and name.
-func (s aWSIAMRoleNamespaceLister) Get(name string) (*v1.AWSIAMRole, error) {
-	obj, exists, err := s.indexer.GetByKey(s.namespace + "/" + name)
-	if err != nil {
-		return nil, err
-	}
-	if !exists {
-		return nil, errors.NewNotFound(v1.Resource("awsiamrole"), name)
-	}
-	return obj.(*v1.AWSIAMRole), nil
+	listers.ResourceIndexer[*v1.AWSIAMRole]
 }

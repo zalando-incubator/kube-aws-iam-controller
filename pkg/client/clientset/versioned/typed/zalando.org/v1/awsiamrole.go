@@ -1,5 +1,5 @@
 /*
-Copyright 2024 The Kubernetes Authors.
+Copyright 2025 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,9 +19,9 @@ limitations under the License.
 package v1
 
 import (
-	"context"
+	context "context"
 
-	v1 "github.com/zalando-incubator/kube-aws-iam-controller/pkg/apis/zalando.org/v1"
+	zalandoorgv1 "github.com/zalando-incubator/kube-aws-iam-controller/pkg/apis/zalando.org/v1"
 	scheme "github.com/zalando-incubator/kube-aws-iam-controller/pkg/client/clientset/versioned/scheme"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
@@ -37,33 +37,34 @@ type AWSIAMRolesGetter interface {
 
 // AWSIAMRoleInterface has methods to work with AWSIAMRole resources.
 type AWSIAMRoleInterface interface {
-	Create(ctx context.Context, aWSIAMRole *v1.AWSIAMRole, opts metav1.CreateOptions) (*v1.AWSIAMRole, error)
-	Update(ctx context.Context, aWSIAMRole *v1.AWSIAMRole, opts metav1.UpdateOptions) (*v1.AWSIAMRole, error)
+	Create(ctx context.Context, aWSIAMRole *zalandoorgv1.AWSIAMRole, opts metav1.CreateOptions) (*zalandoorgv1.AWSIAMRole, error)
+	Update(ctx context.Context, aWSIAMRole *zalandoorgv1.AWSIAMRole, opts metav1.UpdateOptions) (*zalandoorgv1.AWSIAMRole, error)
 	// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-	UpdateStatus(ctx context.Context, aWSIAMRole *v1.AWSIAMRole, opts metav1.UpdateOptions) (*v1.AWSIAMRole, error)
+	UpdateStatus(ctx context.Context, aWSIAMRole *zalandoorgv1.AWSIAMRole, opts metav1.UpdateOptions) (*zalandoorgv1.AWSIAMRole, error)
 	Delete(ctx context.Context, name string, opts metav1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts metav1.DeleteOptions, listOpts metav1.ListOptions) error
-	Get(ctx context.Context, name string, opts metav1.GetOptions) (*v1.AWSIAMRole, error)
-	List(ctx context.Context, opts metav1.ListOptions) (*v1.AWSIAMRoleList, error)
+	Get(ctx context.Context, name string, opts metav1.GetOptions) (*zalandoorgv1.AWSIAMRole, error)
+	List(ctx context.Context, opts metav1.ListOptions) (*zalandoorgv1.AWSIAMRoleList, error)
 	Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error)
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *v1.AWSIAMRole, err error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *zalandoorgv1.AWSIAMRole, err error)
 	AWSIAMRoleExpansion
 }
 
 // aWSIAMRoles implements AWSIAMRoleInterface
 type aWSIAMRoles struct {
-	*gentype.ClientWithList[*v1.AWSIAMRole, *v1.AWSIAMRoleList]
+	*gentype.ClientWithList[*zalandoorgv1.AWSIAMRole, *zalandoorgv1.AWSIAMRoleList]
 }
 
 // newAWSIAMRoles returns a AWSIAMRoles
 func newAWSIAMRoles(c *ZalandoV1Client, namespace string) *aWSIAMRoles {
 	return &aWSIAMRoles{
-		gentype.NewClientWithList[*v1.AWSIAMRole, *v1.AWSIAMRoleList](
+		gentype.NewClientWithList[*zalandoorgv1.AWSIAMRole, *zalandoorgv1.AWSIAMRoleList](
 			"awsiamroles",
 			c.RESTClient(),
 			scheme.ParameterCodec,
 			namespace,
-			func() *v1.AWSIAMRole { return &v1.AWSIAMRole{} },
-			func() *v1.AWSIAMRoleList { return &v1.AWSIAMRoleList{} }),
+			func() *zalandoorgv1.AWSIAMRole { return &zalandoorgv1.AWSIAMRole{} },
+			func() *zalandoorgv1.AWSIAMRoleList { return &zalandoorgv1.AWSIAMRoleList{} },
+		),
 	}
 }

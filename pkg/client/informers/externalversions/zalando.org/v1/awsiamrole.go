@@ -1,5 +1,5 @@
 /*
-Copyright 2024 The Kubernetes Authors.
+Copyright 2025 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,13 +19,13 @@ limitations under the License.
 package v1
 
 import (
-	"context"
+	context "context"
 	time "time"
 
-	zalandoorgv1 "github.com/zalando-incubator/kube-aws-iam-controller/pkg/apis/zalando.org/v1"
+	apiszalandoorgv1 "github.com/zalando-incubator/kube-aws-iam-controller/pkg/apis/zalando.org/v1"
 	versioned "github.com/zalando-incubator/kube-aws-iam-controller/pkg/client/clientset/versioned"
 	internalinterfaces "github.com/zalando-incubator/kube-aws-iam-controller/pkg/client/informers/externalversions/internalinterfaces"
-	v1 "github.com/zalando-incubator/kube-aws-iam-controller/pkg/client/listers/zalando.org/v1"
+	zalandoorgv1 "github.com/zalando-incubator/kube-aws-iam-controller/pkg/client/listers/zalando.org/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
@@ -36,7 +36,7 @@ import (
 // AWSIAMRoles.
 type AWSIAMRoleInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1.AWSIAMRoleLister
+	Lister() zalandoorgv1.AWSIAMRoleLister
 }
 
 type aWSIAMRoleInformer struct {
@@ -71,7 +71,7 @@ func NewFilteredAWSIAMRoleInformer(client versioned.Interface, namespace string,
 				return client.ZalandoV1().AWSIAMRoles(namespace).Watch(context.TODO(), options)
 			},
 		},
-		&zalandoorgv1.AWSIAMRole{},
+		&apiszalandoorgv1.AWSIAMRole{},
 		resyncPeriod,
 		indexers,
 	)
@@ -82,9 +82,9 @@ func (f *aWSIAMRoleInformer) defaultInformer(client versioned.Interface, resyncP
 }
 
 func (f *aWSIAMRoleInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&zalandoorgv1.AWSIAMRole{}, f.defaultInformer)
+	return f.factory.InformerFor(&apiszalandoorgv1.AWSIAMRole{}, f.defaultInformer)
 }
 
-func (f *aWSIAMRoleInformer) Lister() v1.AWSIAMRoleLister {
-	return v1.NewAWSIAMRoleLister(f.Informer().GetIndexer())
+func (f *aWSIAMRoleInformer) Lister() zalandoorgv1.AWSIAMRoleLister {
+	return zalandoorgv1.NewAWSIAMRoleLister(f.Informer().GetIndexer())
 }

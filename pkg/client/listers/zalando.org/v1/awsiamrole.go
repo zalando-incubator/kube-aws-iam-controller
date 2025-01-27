@@ -1,5 +1,5 @@
 /*
-Copyright 2024 The Kubernetes Authors.
+Copyright 2025 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,10 +19,10 @@ limitations under the License.
 package v1
 
 import (
-	v1 "github.com/zalando-incubator/kube-aws-iam-controller/pkg/apis/zalando.org/v1"
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/client-go/listers"
-	"k8s.io/client-go/tools/cache"
+	zalandoorgv1 "github.com/zalando-incubator/kube-aws-iam-controller/pkg/apis/zalando.org/v1"
+	labels "k8s.io/apimachinery/pkg/labels"
+	listers "k8s.io/client-go/listers"
+	cache "k8s.io/client-go/tools/cache"
 )
 
 // AWSIAMRoleLister helps list AWSIAMRoles.
@@ -30,7 +30,7 @@ import (
 type AWSIAMRoleLister interface {
 	// List lists all AWSIAMRoles in the indexer.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1.AWSIAMRole, err error)
+	List(selector labels.Selector) (ret []*zalandoorgv1.AWSIAMRole, err error)
 	// AWSIAMRoles returns an object that can list and get AWSIAMRoles.
 	AWSIAMRoles(namespace string) AWSIAMRoleNamespaceLister
 	AWSIAMRoleListerExpansion
@@ -38,17 +38,17 @@ type AWSIAMRoleLister interface {
 
 // aWSIAMRoleLister implements the AWSIAMRoleLister interface.
 type aWSIAMRoleLister struct {
-	listers.ResourceIndexer[*v1.AWSIAMRole]
+	listers.ResourceIndexer[*zalandoorgv1.AWSIAMRole]
 }
 
 // NewAWSIAMRoleLister returns a new AWSIAMRoleLister.
 func NewAWSIAMRoleLister(indexer cache.Indexer) AWSIAMRoleLister {
-	return &aWSIAMRoleLister{listers.New[*v1.AWSIAMRole](indexer, v1.Resource("awsiamrole"))}
+	return &aWSIAMRoleLister{listers.New[*zalandoorgv1.AWSIAMRole](indexer, zalandoorgv1.Resource("awsiamrole"))}
 }
 
 // AWSIAMRoles returns an object that can list and get AWSIAMRoles.
 func (s *aWSIAMRoleLister) AWSIAMRoles(namespace string) AWSIAMRoleNamespaceLister {
-	return aWSIAMRoleNamespaceLister{listers.NewNamespaced[*v1.AWSIAMRole](s.ResourceIndexer, namespace)}
+	return aWSIAMRoleNamespaceLister{listers.NewNamespaced[*zalandoorgv1.AWSIAMRole](s.ResourceIndexer, namespace)}
 }
 
 // AWSIAMRoleNamespaceLister helps list and get AWSIAMRoles.
@@ -56,15 +56,15 @@ func (s *aWSIAMRoleLister) AWSIAMRoles(namespace string) AWSIAMRoleNamespaceList
 type AWSIAMRoleNamespaceLister interface {
 	// List lists all AWSIAMRoles in the indexer for a given namespace.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1.AWSIAMRole, err error)
+	List(selector labels.Selector) (ret []*zalandoorgv1.AWSIAMRole, err error)
 	// Get retrieves the AWSIAMRole from the indexer for a given namespace and name.
 	// Objects returned here must be treated as read-only.
-	Get(name string) (*v1.AWSIAMRole, error)
+	Get(name string) (*zalandoorgv1.AWSIAMRole, error)
 	AWSIAMRoleNamespaceListerExpansion
 }
 
 // aWSIAMRoleNamespaceLister implements the AWSIAMRoleNamespaceLister
 // interface.
 type aWSIAMRoleNamespaceLister struct {
-	listers.ResourceIndexer[*v1.AWSIAMRole]
+	listers.ResourceIndexer[*zalandoorgv1.AWSIAMRole]
 }

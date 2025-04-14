@@ -3,10 +3,10 @@ module github.com/zalando-incubator/kube-aws-iam-controller
 require (
 	github.com/alecthomas/kingpin/v2 v2.4.0
 	github.com/aws/aws-sdk-go-v2 v1.36.3
-	github.com/aws/aws-sdk-go-v2/config v1.29.13
-	github.com/aws/aws-sdk-go-v2/credentials v1.17.66
+	github.com/aws/aws-sdk-go-v2/config v1.29.14
+	github.com/aws/aws-sdk-go-v2/credentials v1.17.67
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.30
-	github.com/aws/aws-sdk-go-v2/service/sts v1.33.18
+	github.com/aws/aws-sdk-go-v2/service/sts v1.33.19
 	github.com/heptiolabs/healthcheck v0.0.0-20211123025425-613501dd5deb
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.10.0

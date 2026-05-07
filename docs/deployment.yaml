@@ -23,7 +23,7 @@ spec:
       hostNetwork: true
       containers:
       - name: kube-aws-iam-controller
-        image: registry.opensource.zalan.do/teapot/kube-aws-iam-controller:latest
+        image: ghrc.io/zalando-incubator/kube-aws-iam-controller:latest
         resources:
           limits:
             cpu: 25m

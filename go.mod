@@ -10,10 +10,10 @@ require (
 	github.com/heptiolabs/healthcheck v0.0.0-20211123025425-613501dd5deb
 	github.com/sirupsen/logrus v1.10.1
 	github.com/stretchr/testify v1.12.1
-	k8s.io/api v0.36.3
-	k8s.io/apimachinery v0.36.3
-	k8s.io/client-go v0.36.3
-	k8s.io/code-generator v0.36.3
+	k8s.io/api v0.36.4
+	k8s.io/apimachinery v0.36.4
+	k8s.io/client-go v0.36.4
+	k8s.io/code-generator v0.36.4
 	sigs.k8s.io/controller-tools v0.21.0
 )
 

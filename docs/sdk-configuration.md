@@ -13,7 +13,7 @@ guide for those that have support already.
 | [AWS CLI](#aws-cli) | :heavy_check_mark: | `>=1.16.43` | |
 | [Ruby AWS SDK](#) | :heavy_plus_sign: | | Supported but not yet tested ([aws-sdk-ruby/#1820](https://github.com/aws/aws-sdk-ruby/pull/1820)) |
 | [Golang AWS SDK](#golang-aws-sdk) | :heavy_check_mark: | `>=v1.16.2` | |
-| [JS AWS SDK](#) | :heavy_multiplication_x: | | Not yet supported ([aws-sdk-js/#1923](https://github.com/aws/aws-sdk-js/pull/1923)) |
+| [JS AWS SDK](#js-aws-sdk) | :heavy_plus_sign: | `>=2.429.0` |  |
 
 ## Java AWS SDK (JVM)
 
@@ -71,6 +71,60 @@ It's important that you set the `AWS_CREDENTIALS_PROFILES_FILE` or `AWS_SHARED_C
 You also need to mount the secret named after the `AWSIAMRole` resource into the pod under `/meta/aws-iam`. This secret will be provisioned by the **kube-aws-iam-controller**.
 
 See full [Java example project](https://github.com/mikkeloscar/kube-aws-iam-controller-java-example).
+
+## JS AWS SDK
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aws-iam-js-example
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      application: aws-iam-js-example
+  template:
+    metadata:
+      labels:
+        application: aws-iam-js-example
+    spec:
+      containers:
+      - name: aws-iam-python-example
+        image: mikkeloscar/kube-aws-iam-controller-js-example:latest
+        env:
+        # must be set for the AWS SDK/AWS CLI to find the credentials file.
+        - name: AWS_SDK_LOAD_CONFIG
+          value: "true"
+        - name: AWS_SHARED_CREDENTIALS_FILE # used by JS SDK
+          value: /meta/aws-iam/credentials.process
+        - name: AWS_CONFIG_FILE
+          value: /meta/aws-iam/credentials.process
+        - name: AWS_DEFAULT_REGION # adjust to your AWS region
+          value: eu-central-1
+        volumeMounts:
+        - name: aws-iam-credentials
+          mountPath: /meta/aws-iam
+          readOnly: true
+      volumes:
+      - name: aws-iam-credentials
+        secret:
+          secretName: aws-iam-js-example # name of the AWSIAMRole resource
+---
+apiVersion: zalando.org/v1
+kind: AWSIAMRole
+metadata:
+  name: aws-iam-js-example
+spec:
+  roleReference: aws-iam-example
+```
+
+It's important that you set the `AWS_SHARED_CREDENTIALS_FILE` and `AWS_CONFIG_FILE` environment
+variables as shown in the example as well as mounting the secret named after the
+`AWSIAMRole` resource into the pod under `/meta/aws-iam`. This
+secret will be provisioned by the **kube-aws-iam-controller**.
+
+See full [JS example project](https://github.com/mikkeloscar/kube-aws-iam-controller-js-example).
 
 ## Python AWS SDK (boto3)
 
